@@ -38,9 +38,18 @@
   .section{display:none;}
   .section.active{display:block;}
   .filter-bar{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
-  .filter-bar select,.filter-bar input{border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:.75rem;background:white;}
   .filter-bar button{padding:5px 12px;border-radius:6px;border:none;background:var(--blue);color:white;font-size:.75rem;cursor:pointer;font-weight:600;}
   .refresh-btn{background:#047857!important;}
+  .clear-btn{background:#6b7280!important;}
+  .ms{position:relative;display:inline-block;}
+  .ms-btn{border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:.75rem;background:white;cursor:pointer;min-width:120px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:6px;white-space:nowrap;}
+  .ms-btn.active{border-color:var(--blue);background:#eff6ff;color:var(--blue);}
+  .ms-drop{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:9999;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:170px;padding:5px 0;}
+  .ms.open .ms-drop{display:block;}
+  .ms-opt{display:flex;align-items:center;gap:8px;padding:6px 13px;font-size:.73rem;cursor:pointer;color:var(--dark);}
+  .ms-opt:hover{background:#f3f4f6;}
+  .ms-opt input[type=checkbox]{accent-color:var(--blue);width:13px;height:13px;cursor:pointer;}
+  .new-chk{display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:6px;padding:5px 10px;background:white;font-size:.75rem;cursor:pointer;}
   .table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border);background:white;}
   table{width:100%;border-collapse:collapse;font-size:.74rem;}
   th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);border-bottom:1px solid var(--border);white-space:nowrap;}
@@ -151,6 +160,7 @@
   <div class="kpi amber"><div class="num" id="kpiDueSoon">—</div><div class="lbl">Due ≤ 14 Days</div></div>
   <div class="kpi green"><div class="num">2</div><div class="lbl">Opportunities (Dec 29)</div></div>
   <div class="kpi blue"><div class="num">71</div><div class="lbl">Total Items</div></div>
+  <div class="kpi amber"><div class="num" id="kpiOpen">—</div><div class="lbl">Open</div></div>
   <div class="kpi green"><div class="num" id="kpiDone">0</div><div class="lbl">Completed</div></div>
 </div>
 
@@ -172,11 +182,49 @@
     <span id="overdueAlertBody"></span>
   </div>
   <div class="filter-bar">
-    <select id="fState" onchange="filterTable()"><option value="">All States</option><option value="Central">Central</option><option value="Maharashtra">Maharashtra</option><option value="Uttar Pradesh">UP</option></select>
-    <select id="fPriority" onchange="filterTable()"><option value="">All Priorities</option><option value="Critical">Critical</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select>
-    <select id="fStatus" onchange="filterTable()"><option value="">All Statuses</option><option value="Overdue">Overdue</option><option value="Open">Open</option><option value="In Progress">In Progress</option><option value="Done">Done</option></select>
-    <select id="fArea" onchange="filterTable()"><option value="">All Areas</option><option value="POSH">POSH</option><option value="PF / ESI">PF/ESI</option><option value="Wages">Wages</option><option value="IR Code">IR Code</option><option value="OSH">OSH</option><option value="Social Security">Social Security</option><option value="Professional Tax">Professional Tax</option><option value="Gig Workers">Gig Workers</option><option value="Contract Labour">Contract Labour</option><option value="Employment Law">Employment Law</option></select>
-    <select id="fNew" onchange="filterTable()"><option value="">All Items</option><option value="true">New This Session</option></select>
+    <div class="ms" id="msState">
+      <button class="ms-btn" onclick="toggleMs('msState',event)">All States <span>▾</span></button>
+      <div class="ms-drop">
+        <label class="ms-opt"><input type="checkbox" value="Central" onchange="filterTable()"> Central</label>
+        <label class="ms-opt"><input type="checkbox" value="Maharashtra" onchange="filterTable()"> Maharashtra</label>
+        <label class="ms-opt"><input type="checkbox" value="Uttar Pradesh" onchange="filterTable()"> Uttar Pradesh</label>
+      </div>
+    </div>
+    <div class="ms" id="msPriority">
+      <button class="ms-btn" onclick="toggleMs('msPriority',event)">All Priorities <span>▾</span></button>
+      <div class="ms-drop">
+        <label class="ms-opt"><input type="checkbox" value="Critical" onchange="filterTable()"> Critical</label>
+        <label class="ms-opt"><input type="checkbox" value="High" onchange="filterTable()"> High</label>
+        <label class="ms-opt"><input type="checkbox" value="Medium" onchange="filterTable()"> Medium</label>
+        <label class="ms-opt"><input type="checkbox" value="Low" onchange="filterTable()"> Low</label>
+      </div>
+    </div>
+    <div class="ms" id="msStatus">
+      <button class="ms-btn" onclick="toggleMs('msStatus',event)">All Statuses <span>▾</span></button>
+      <div class="ms-drop">
+        <label class="ms-opt"><input type="checkbox" value="Overdue" onchange="filterTable()"> ⚠ Overdue</label>
+        <label class="ms-opt"><input type="checkbox" value="Open" onchange="filterTable()"> Open</label>
+        <label class="ms-opt"><input type="checkbox" value="In Progress" onchange="filterTable()"> In Progress</label>
+        <label class="ms-opt"><input type="checkbox" value="Done" onchange="filterTable()"> ✓ Done</label>
+      </div>
+    </div>
+    <div class="ms" id="msArea">
+      <button class="ms-btn" onclick="toggleMs('msArea',event)">All Areas <span>▾</span></button>
+      <div class="ms-drop">
+        <label class="ms-opt"><input type="checkbox" value="POSH" onchange="filterTable()"> POSH</label>
+        <label class="ms-opt"><input type="checkbox" value="PF / ESI" onchange="filterTable()"> PF / ESI</label>
+        <label class="ms-opt"><input type="checkbox" value="Wages" onchange="filterTable()"> Wages</label>
+        <label class="ms-opt"><input type="checkbox" value="IR Code" onchange="filterTable()"> IR Code</label>
+        <label class="ms-opt"><input type="checkbox" value="OSH" onchange="filterTable()"> OSH</label>
+        <label class="ms-opt"><input type="checkbox" value="Social Security" onchange="filterTable()"> Social Security</label>
+        <label class="ms-opt"><input type="checkbox" value="Professional Tax" onchange="filterTable()"> Professional Tax</label>
+        <label class="ms-opt"><input type="checkbox" value="Gig Workers" onchange="filterTable()"> Gig Workers</label>
+        <label class="ms-opt"><input type="checkbox" value="Contract Labour" onchange="filterTable()"> Contract Labour</label>
+        <label class="ms-opt"><input type="checkbox" value="Employment Law" onchange="filterTable()"> Employment Law</label>
+      </div>
+    </div>
+    <label class="new-chk"><input type="checkbox" id="fNew" onchange="filterTable()"> New This Session</label>
+    <button onclick="clearFilters()" class="clear-btn">✕ Clear</button>
     <button onclick="filterTable()">Apply</button>
     <button class="refresh-btn" onclick="loadStatuses()">↻ Sync</button>
     <span id="syncStatus"></span>
@@ -628,6 +676,7 @@ function updateHeader() {
   const score = computeHealthScore();
   const overdue = actions.filter(a => effectiveStatus(a) === 'Overdue').length;
   const done = actions.filter(a => a.status === 'Done').length;
+  const open = actions.filter(a => effectiveStatus(a) === 'Open').length;
   const critical = actions.filter(a => a.priority === 'Critical').length;
   const high = actions.filter(a => a.priority === 'High').length;
   const medium = actions.filter(a => a.priority === 'Medium').length;
@@ -653,6 +702,7 @@ function updateHeader() {
   document.getElementById('kpiHigh').textContent = high;
   document.getElementById('kpiMedium').textContent = medium;
   document.getElementById('kpiDueSoon').textContent = dueSoon;
+  document.getElementById('kpiOpen').textContent = open;
   document.getElementById('kpiDone').textContent = done;
 
   // Alert banner
@@ -744,22 +794,56 @@ function setSyncStatus(msg, type) {
 // ═══════════════════════════════════════════════════════════
 // RENDER TABLE
 // ═══════════════════════════════════════════════════════════
+function toggleMs(id, e) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById(id);
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.ms').forEach(m => m.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+document.addEventListener('click', function() {
+  document.querySelectorAll('.ms').forEach(m => m.classList.remove('open'));
+});
+
+function getMsValues(id) {
+  return Array.from(document.querySelectorAll('#' + id + ' input[type=checkbox]:checked')).map(c => c.value);
+}
+
+function updateMsBtn(id, label) {
+  const vals = getMsValues(id);
+  const btn = document.querySelector('#' + id + ' .ms-btn');
+  if (!btn) return;
+  btn.innerHTML = (vals.length === 0 ? label : vals.join(', ')) + ' <span>▾</span>';
+  btn.classList.toggle('active', vals.length > 0);
+}
+
+function clearFilters() {
+  document.querySelectorAll('.ms input[type=checkbox]').forEach(c => c.checked = false);
+  const fn = document.getElementById('fNew'); if (fn) fn.checked = false;
+  updateMsBtn('msState','All States');
+  updateMsBtn('msPriority','All Priorities');
+  updateMsBtn('msStatus','All Statuses');
+  updateMsBtn('msArea','All Areas');
+  filterTable();
+}
+
 function filterTable() {
-  const fState = document.getElementById('fState').value;
-  const fPrio = document.getElementById('fPriority').value;
-  const fStat = document.getElementById('fStatus').value;
-  const fArea = document.getElementById('fArea').value;
-  const fNew = document.getElementById('fNew').value;
+  const fStates = getMsValues('msState');
+  const fPrios  = getMsValues('msPriority');
+  const fStats  = getMsValues('msStatus');
+  const fAreas  = getMsValues('msArea');
+  const fNew    = document.getElementById('fNew') ? document.getElementById('fNew').checked : false;
+  updateMsBtn('msState','All States');
+  updateMsBtn('msPriority','All Priorities');
+  updateMsBtn('msStatus','All Statuses');
+  updateMsBtn('msArea','All Areas');
   const filtered = actions.filter(a => {
     const eff = effectiveStatus(a);
-    if (fState && a.state !== fState && !(fState === 'Central' && a.state === 'Central')) {
-      if (fState === 'Central' && a.state !== 'Central') return false;
-      if (fState !== 'Central' && a.state !== fState) return false;
-    }
-    if (fPrio && a.priority !== fPrio) return false;
-    if (fStat && eff !== fStat) return false;
-    if (fArea && a.area !== fArea) return false;
-    if (fNew && String(a.isNew) !== fNew) return false;
+    if (fStates.length > 0 && !fStates.includes(a.state)) return false;
+    if (fPrios.length  > 0 && !fPrios.includes(a.priority)) return false;
+    if (fStats.length  > 0 && !fStats.includes(eff)) return false;
+    if (fAreas.length  > 0 && !fAreas.includes(a.area)) return false;
+    if (fNew && !a.isNew) return false;
     return true;
   });
   renderTable(filtered);
