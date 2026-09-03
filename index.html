@@ -120,12 +120,12 @@
 
 <div class="header">
   <div>
-    <h1>🏛 Compliance Intelligence Dashboard — v3.5</h1>
-    <div style="font-size:.68rem;color:#9ca3af;margin-top:2px;">BusinessNext | IT Product Co. | ~1,500 Employees | UP &amp; Maharashtra | Aug 6, 2026 | All Documents Reviewed</div>
+    <h1>🏛 Compliance Intelligence Dashboard — v3.7</h1>
+    <div style="font-size:.68rem;color:#9ca3af;margin-top:2px;">BusinessNext | IT Product Co. | ~1,500 Employees | UP &amp; Maharashtra | Sep 3, 2026 | All Documents Reviewed</div>
   </div>
   <div class="meta">
     <strong id="headerScore">Loading...</strong><br>
-    NL-98 to NL-116 | Monthly Mar/Jun/Jul/Aug 2026 | EPFO Circulars | Labour Code Central Rules<br>
+    NL-98 to NL-119 | Monthly Mar/Jun/Jul/Aug/Sep 2026 | EPFO Circulars | Labour Code Central Rules<br>
     <span id="headerBadge" style="color:#fbbf24"></span>
   </div>
 </div>
@@ -159,7 +159,7 @@
   <div class="kpi blue"><div class="num" id="kpiMedium">—</div><div class="lbl">Medium</div></div>
   <div class="kpi amber"><div class="num" id="kpiDueSoon">—</div><div class="lbl">Due ≤ 14 Days</div></div>
   <div class="kpi green"><div class="num">2</div><div class="lbl">Opportunities (Dec 29)</div></div>
-  <div class="kpi blue"><div class="num">71</div><div class="lbl">Total Items</div></div>
+  <div class="kpi blue"><div class="num" id="kpiTotal">—</div><div class="lbl">Total Items</div></div>
   <div class="kpi amber"><div class="num" id="kpiOpen">—</div><div class="lbl">Open</div></div>
   <div class="kpi green"><div class="num" id="kpiDone">0</div><div class="lbl">Completed</div></div>
 </div>
@@ -252,7 +252,7 @@
       <tbody id="tableBody"></tbody>
     </table>
   </div>
-  <div class="last-updated">Last synced: <span id="lastSyncTime">—</span> | v3.5 — All documents reviewed: NL-98 to NL-118, Monthly Mar/Jun/Jul/Aug 2026, EPFO Circulars, Labour Code Central Rules, EPFO UMANG Doc, EPFO PF Withdrawal Infographic, NCW POSH Advisory, Labour Code FAQs, Labour Codes Implementation Presentation</div>
+  <div class="last-updated">Last synced: <span id="lastSyncTime">—</span> | v3.7 — All documents reviewed: NL-98 to NL-119, Monthly Mar/Jun/Jul/Aug/Sep 2026, EPFO Circulars, Labour Code Central Rules, EPFO UMANG Doc, EPFO PF Withdrawal Infographic, NCW POSH Advisory, Labour Code FAQs, Labour Codes Implementation Presentation, Sep 2026 Monthly Newsletter</div>
 </div>
 
 <!-- ═══ CALENDAR ═══ -->
@@ -266,7 +266,7 @@
     <div class="status-block"><div class="sb-label">Many Items OVERDUE</div><div class="sb-status" style="color:var(--red)">⬤ Escalate Now</div></div>
   </div>
 
-  <h3 class="sub-title" style="color:var(--red)">⚠ OVERDUE — Missed Deadlines (as of Aug 6, 2026)</h3>
+  <h3 class="sub-title" style="color:var(--red)">⚠ OVERDUE — Missed Deadlines (as of Sep 3, 2026)</h3>
   <div class="table-wrap" style="margin-bottom:16px">
     <table><thead><tr><th>Was Due</th><th>Obligation</th><th>State</th><th>Priority</th><th>Owner</th><th>Immediate Action</th></tr></thead>
       <tbody>
@@ -425,7 +425,7 @@
 
 <!-- ═══ RISK REGISTER ═══ -->
 <div id="risk" class="section">
-  <h2 class="section-title">Compliance Risk Register — BusinessNext | Aug 6, 2026</h2>
+  <h2 class="section-title">Compliance Risk Register — BusinessNext | Sep 3, 2026</h2>
   <div class="alert-banner">
     <strong>7 Critical-level items and 21 High-level items are currently tracked. Multiple Critical items are past their deadline.</strong>
     Immediate CHRO-level escalation required for EPF/EPS/EDLI scheme transition, Appointment Letters, POSH Maharashtra, and Model Standing Orders.
@@ -535,7 +535,7 @@ let db = null;
 const TODAY = new Date('2026-09-03');
 
 // ═══════════════════════════════════════════════════════════
-// MASTER ACTIONS ARRAY — v3.0 — 51 ITEMS
+// MASTER ACTIONS ARRAY — v3.7 — 73 ITEMS
 // ═══════════════════════════════════════════════════════════
 const actions = [
   {id:1,  area:'POSH', reg:'POSH Act 2013 — MH Inspection Activated', state:'Maharashtra', action:'Verify ICC constitution, She-Box registration, and prepare compliance checklist response per MH WCD inspection checklist', owner:'HR / Legal', due:'2026-06-09', priority:'Critical', status:'Open', risk:'Criminal liability / ₹50K fine / Licence suspension', source:'MH WCD Circular, May 14 2026', month:'May 2026 (NL-107)', isNew:false},
@@ -697,9 +697,10 @@ function updateHeader() {
   document.getElementById('healthSub').textContent = '⚠ ' + overdue + ' Overdue · ' + critical + ' Critical · ' + (51 - done) + ' Active';
 
   document.getElementById('headerScore').textContent = 'Health Score: ' + score + '/100';
-  document.getElementById('headerBadge').textContent = '▲ ' + overdue + ' Overdue | ' + done + ' Done | 51 Total';
+  document.getElementById('headerBadge').textContent = '▲ ' + overdue + ' Overdue | ' + done + ' Done | ' + actions.length + ' Total';
 
   // KPIs
+  document.getElementById('kpiTotal').textContent = actions.length;
   document.getElementById('kpiCritical').textContent = critical;
   document.getElementById('kpiOverdue').textContent = overdue;
   document.getElementById('kpiHigh').textContent = high;
@@ -855,6 +856,7 @@ function filterTable() {
 function renderTable(items) {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
+  items = items.slice().sort((a, b) => a.id - b.id);
   items.forEach(item => {
     const eff = effectiveStatus(item);
     const days = daysUntil(item.due);
