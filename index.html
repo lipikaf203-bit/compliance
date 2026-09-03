@@ -154,13 +154,9 @@
 
 <div class="kpi-strip" id="kpiStrip">
   <div class="kpi red"><div class="num" id="kpiCritical">—</div><div class="lbl">Critical</div></div>
-  <div class="kpi red"><div class="num" id="kpiOverdue">—</div><div class="lbl">Auto-Overdue</div></div>
   <div class="kpi amber"><div class="num" id="kpiHigh">—</div><div class="lbl">High Priority</div></div>
-  <div class="kpi blue"><div class="num" id="kpiMedium">—</div><div class="lbl">Medium</div></div>
-  <div class="kpi amber"><div class="num" id="kpiDueSoon">—</div><div class="lbl">Due ≤ 14 Days</div></div>
-  <div class="kpi green"><div class="num">2</div><div class="lbl">Opportunities (Dec 29)</div></div>
   <div class="kpi blue"><div class="num" id="kpiTotal">—</div><div class="lbl">Total Items</div></div>
-  <div class="kpi amber"><div class="num" id="kpiOpen">—</div><div class="lbl">Open</div></div>
+  <div class="kpi amber"><div class="num" id="kpiOpen">—</div><div class="lbl">Total Open</div></div>
   <div class="kpi green"><div class="num" id="kpiDone">0</div><div class="lbl">Completed</div></div>
 </div>
 
@@ -679,11 +675,9 @@ function updateHeader() {
   const score = computeHealthScore();
   const overdue = actions.filter(a => effectiveStatus(a) === 'Overdue').length;
   const done = actions.filter(a => a.status === 'Done').length;
-  const open = actions.filter(a => effectiveStatus(a) === 'Open').length;
+  const open = actions.filter(a => ['Open','In Progress','Overdue'].includes(effectiveStatus(a))).length;
   const critical = actions.filter(a => a.priority === 'Critical').length;
   const high = actions.filter(a => a.priority === 'High').length;
-  const medium = actions.filter(a => a.priority === 'Medium').length;
-  const dueSoon = actions.filter(a => { const d = daysUntil(a.due); return d >= 0 && d <= 14 && effectiveStatus(a) !== 'Done'; }).length;
 
   // Score circle
   const pct = score + '%';
@@ -694,7 +688,7 @@ function updateHeader() {
 
   const lbl = score > 70 ? 'AMBER' : 'RED — Act Now';
   document.getElementById('healthLabel').innerHTML = '<strong>' + score + '/100 — ' + lbl + '</strong>';
-  document.getElementById('healthSub').textContent = '⚠ ' + overdue + ' Overdue · ' + critical + ' Critical · ' + (51 - done) + ' Active';
+  document.getElementById('healthSub').textContent = '⚠ ' + overdue + ' Overdue · ' + critical + ' Critical · ' + (actions.length - done) + ' Active';
 
   document.getElementById('headerScore').textContent = 'Health Score: ' + score + '/100';
   document.getElementById('headerBadge').textContent = '▲ ' + overdue + ' Overdue | ' + done + ' Done | ' + actions.length + ' Total';
@@ -702,16 +696,13 @@ function updateHeader() {
   // KPIs
   document.getElementById('kpiTotal').textContent = actions.length;
   document.getElementById('kpiCritical').textContent = critical;
-  document.getElementById('kpiOverdue').textContent = overdue;
   document.getElementById('kpiHigh').textContent = high;
-  document.getElementById('kpiMedium').textContent = medium;
-  document.getElementById('kpiDueSoon').textContent = dueSoon;
   document.getElementById('kpiOpen').textContent = open;
   document.getElementById('kpiDone').textContent = done;
 
   // Alert banner
   const overdueItems = actions.filter(a => effectiveStatus(a) === 'Overdue' && a.priority === 'Critical');
-  document.getElementById('overdueAlertTitle').textContent = overdue + ' items are OVERDUE as of August 6, 2026. ' + overdueItems.length + ' are Critical priority.';
+  document.getElementById('overdueAlertTitle').textContent = overdue + ' items are OVERDUE as of Sep 3, 2026. ' + overdueItems.length + ' are Critical priority.';
   document.getElementById('overdueAlertBody').textContent = 'Immediate escalation required: EPF/EPS/EDLI 2026 scheme transition, Appointment Letters, POSH MH inspection compliance, Model Standing Orders certification, Code on Wages audit, and IR Code legacy-law transition are all past deadline.';
 }
 
