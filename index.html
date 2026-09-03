@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compliance Intelligence Dashboard v3.7 | BusinessNext HR</title>
+<style>
+  :root{--red:#dc2626;--amber:#d97706;--green:#16a34a;--blue:#1d4ed8;--gray:#6b7280;--dark:#111827;--light:#f9fafb;--border:#e5e7eb;color-scheme:light;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f3f4f6;color:var(--dark);}
+  .header{background:var(--dark);color:white;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  .header h1{font-size:1.08rem;font-weight:700;letter-spacing:.02em;}
+  .header .meta{font-size:.7rem;color:#9ca3af;text-align:right;}
+  .header .meta strong{color:white;}
+  .health-bar{background:#1f2937;padding:10px 28px;display:flex;gap:28px;align-items:center;flex-wrap:wrap;}
+  .score-circle{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+  .score-inner{width:40px;height:40px;background:#1f2937;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fbbf24;}
+  .health-label{color:white;font-size:.76rem;}
+  .health-label strong{display:block;font-size:.92rem;color:#fbbf24;}
+  .health-pill{padding:3px 11px;border-radius:20px;font-size:.66rem;font-weight:600;}
+  .pill-green{background:#14532d;color:#86efac;}
+  .pill-amber{background:#78350f;color:#fde68a;}
+  .pill-red{background:#7f1d1d;color:#fca5a5;}
+  .new-badge{background:#1d4ed8;color:#bfdbfe;padding:3px 10px;border-radius:20px;font-size:.63rem;font-weight:700;letter-spacing:.04em;}
+  .kpi-strip{display:flex;gap:8px;padding:12px 28px;background:white;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .kpi{background:var(--light);border:1px solid var(--border);border-radius:7px;padding:9px 14px;min-width:100px;flex:1;}
+  .kpi .num{font-size:1.5rem;font-weight:700;}
+  .kpi .lbl{font-size:.63rem;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;}
+  .kpi.red .num{color:var(--red);}
+  .kpi.amber .num{color:var(--amber);}
+  .kpi.green .num{color:var(--green);}
+  .kpi.blue .num{color:var(--blue);}
+  .tabs{display:flex;background:white;border-bottom:2px solid var(--border);padding:0 28px;overflow-x:auto;}
+  .tab{padding:9px 16px;font-size:.78rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--gray);transition:all .2s;white-space:nowrap;}
+  .tab.active{border-bottom-color:var(--blue);color:var(--blue);}
+  .tab:hover{color:var(--dark);}
+  .content{padding:18px 28px;}
+  .section{display:none;}
+  .section.active{display:block;}
+  .filter-bar{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+  .filter-bar button{padding:5px 12px;border-radius:6px;border:none;background:var(--blue);color:white;font-size:.75rem;cursor:pointer;font-weight:600;}
+  .refresh-btn{background:#047857!important;}
+  .clear-btn{background:#6b7280!important;}
+  .ms{position:relative;display:inline-block;}
+  .ms-btn{border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:.75rem;background:white;cursor:pointer;min-width:120px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:6px;white-space:nowrap;}
+  .ms-btn.active{border-color:var(--blue);background:#eff6ff;color:var(--blue);}
+  .ms-drop{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:9999;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:170px;padding:5px 0;}
+  .ms.open .ms-drop{display:block;}
+  .ms-opt{display:flex;align-items:center;gap:8px;padding:6px 13px;font-size:.73rem;cursor:pointer;color:var(--dark);}
+  .ms-opt:hover{background:#f3f4f6;}
+  .ms-opt input[type=checkbox]{accent-color:var(--blue);width:13px;height:13px;cursor:pointer;}
+  .new-chk{display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:6px;padding:5px 10px;background:white;font-size:.75rem;cursor:pointer;}
+  .table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border);background:white;}
+  table{width:100%;border-collapse:collapse;font-size:.74rem;}
+  th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:7px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:#f8fafc;}
+  tr.new-row td{background:#eff6ff;}
+  tr.done-row td{opacity:.5;}
+  .badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .badge-critical{background:#fee2e2;color:#991b1b;}
+  .badge-high{background:#fef3c7;color:#92400e;}
+  .badge-medium{background:#dbeafe;color:#1e40af;}
+  .badge-low{background:#f0fdf4;color:#166534;}
+  .badge-open{background:#fef3c7;color:#92400e;}
+  .badge-overdue{background:#fee2e2;color:#991b1b;}
+  .badge-inprogress{background:#dbeafe;color:#1e40af;}
+  .badge-done{background:#dcfce7;color:#166534;}
+  .badge-central{background:#ede9fe;color:#5b21b6;}
+  .badge-mh{background:#fce7f3;color:#9d174d;}
+  .badge-up{background:#dbeafe;color:#1e40af;}
+  .badge-new{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;}
+  .status-select{border-radius:4px;padding:3px 5px;font-size:.65rem;font-weight:600;cursor:pointer;outline:none;border:1px solid transparent;min-width:90px;}
+  .status-open{background:#fef3c7;color:#92400e;border-color:#fcd34d;}
+  .status-overdue{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
+  .status-in-progress{background:#dbeafe;color:#1e40af;border-color:#93c5fd;}
+  .status-done{background:#dcfce7;color:#166534;border-color:#86efac;}
+  .notes-input{border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:.65rem;width:140px;color:var(--dark);}
+  .notes-input:focus{outline:none;border-color:#93c5fd;}
+  .src{font-size:.6rem;background:#f3f4f6;border:1px solid var(--border);border-radius:3px;padding:1px 4px;color:#6b7280;}
+  .month-tag{font-size:.58rem;color:#8b5cf6;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:3px;padding:1px 4px;}
+  .alert-banner{background:#fef3c7;border:1px solid #fcd34d;border-radius:7px;padding:10px 14px;margin-bottom:14px;font-size:.76rem;color:#92400e;}
+  .alert-banner strong{display:block;font-size:.8rem;margin-bottom:2px;}
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;}
+  .card{background:white;border-radius:8px;border:1px solid var(--border);padding:14px;}
+  .card h3{font-size:.8rem;font-weight:700;margin-bottom:5px;}
+  .card .card-meta{font-size:.68rem;color:var(--gray);margin-bottom:6px;}
+  .card p{font-size:.74rem;line-height:1.5;color:#374151;}
+  .card .card-footer{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;}
+  .card.border-red{border-left:4px solid var(--red);}
+  .card.border-amber{border-left:4px solid var(--amber);}
+  .card.border-blue{border-left:4px solid var(--blue);}
+  .card.border-green{border-left:4px solid var(--green);}
+  .card.new-card{background:#eff6ff;}
+  h2.section-title{font-size:.88rem;font-weight:700;margin-bottom:12px;}
+  h3.sub-title{font-size:.78rem;font-weight:700;margin:14px 0 8px;}
+  .sync-indicator{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:600;}
+  .sync-saving{background:#fef3c7;color:#92400e;}
+  .sync-saved{background:#dcfce7;color:#166534;}
+  .sync-error{background:#fee2e2;color:#991b1b;}
+  .setup-banner{background:#1e40af;color:white;padding:9px 28px;font-size:.75rem;display:flex;align-items:center;gap:10px;}
+  .setup-banner a{color:#bfdbfe;text-decoration:underline;}
+  .status-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .status-block{flex:1;min-width:130px;background:white;border-radius:7px;border:1px solid var(--border);padding:9px 13px;}
+  .status-block .sb-label{font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);margin-bottom:3px;}
+  .status-block .sb-status{font-size:.8rem;font-weight:700;}
+  .last-updated{font-size:.66rem;color:var(--gray);margin-top:10px;text-align:right;}
+  .exclusion-row td{color:#9ca3af;font-style:italic;}
+  .overdue-auto{color:var(--red);font-weight:700;font-size:.6rem;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<div class="setup-banner" id="setupBanner" style="display:none">
+  ⚙ <strong>Supabase sync active.</strong> All status and notes changes are saved live for your team. <a href="https://supabase.com/dashboard/project/oviboktiounvchxqortz" target="_blank">View Database →</a>
+  <button onclick="document.getElementById('setupBanner').style.display='none'" style="margin-left:auto;background:transparent;border:1px solid #bfdbfe;color:white;border-radius:4px;padding:2px 9px;font-size:.7rem;cursor:pointer">Dismiss</button>
+</div>
+
+<div class="header">
+  <div>
+    <h1>🏛 Compliance Intelligence Dashboard — v3.5</h1>
+    <div style="font-size:.68rem;color:#9ca3af;margin-top:2px;">BusinessNext | IT Product Co. | ~1,500 Employees | UP &amp; Maharashtra | Aug 6, 2026 | All Documents Reviewed</div>
+  </div>
+  <div class="meta">
+    <strong id="headerScore">Loading...</strong><br>
+    NL-98 to NL-116 | Monthly Mar/Jun/Jul/Aug 2026 | EPFO Circulars | Labour Code Central Rules<br>
+    <span id="headerBadge" style="color:#fbbf24"></span>
+  </div>
+</div>
+
+<div class="health-bar">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="score-circle" id="scoreCircle">
+      <div class="score-inner" id="scoreValue">—</div>
+    </div>
+    <div class="health-label">
+      <div style="font-size:.6rem;color:#9ca3af">COMPLIANCE HEALTH SCORE</div>
+      <strong id="healthLabel">Computing...</strong>
+      <div style="font-size:.64rem;color:#fde68a" id="healthSub"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;">
+    <span class="health-pill pill-red">UP: RED</span>
+    <span class="health-pill pill-red">Maharashtra: RED</span>
+    <span class="health-pill pill-amber">Central: AMBER</span>
+    <span class="health-pill pill-red">POSH MH: OVERDUE</span>
+    <span class="health-pill pill-red">EPF/EPS/EDLI: TRANSITION OVERDUE</span>
+    <span class="health-pill pill-amber">VISHWAS: ACT NOW</span>
+    <span class="new-badge">9 NEW — NL-118 + Labour Code FAQs</span>
+  </div>
+</div>
+
+<div class="kpi-strip" id="kpiStrip">
+  <div class="kpi red"><div class="num" id="kpiCritical">—</div><div class="lbl">Critical</div></div>
+  <div class="kpi red"><div class="num" id="kpiOverdue">—</div><div class="lbl">Auto-Overdue</div></div>
+  <div class="kpi amber"><div class="num" id="kpiHigh">—</div><div class="lbl">High Priority</div></div>
+  <div class="kpi blue"><div class="num" id="kpiMedium">—</div><div class="lbl">Medium</div></div>
+  <div class="kpi amber"><div class="num" id="kpiDueSoon">—</div><div class="lbl">Due ≤ 14 Days</div></div>
+  <div class="kpi green"><div class="num">2</div><div class="lbl">Opportunities (Dec 29)</div></div>
+  <div class="kpi blue"><div class="num">71</div><div class="lbl">Total Items</div></div>
+  <div class="kpi amber"><div class="num" id="kpiOpen">—</div><div class="lbl">Open</div></div>
+  <div class="kpi green"><div class="num" id="kpiDone">0</div><div class="lbl">Completed</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('tracker',this)">📋 Action Tracker</div>
+  <div class="tab" onclick="showTab('calendar',this)">📅 Compliance Calendar</div>
+  <div class="tab" onclick="showTab('executive',this)">📊 Executive Summary</div>
+  <div class="tab" onclick="showTab('risk',this)">⚠ Risk Register</div>
+  <div class="tab" onclick="showTab('opportunities',this)">💡 Opportunities</div>
+  <div class="tab" onclick="showTab('exclusions',this)">🚫 Exclusion Log</div>
+</div>
+
+<div class="content">
+
+<!-- ═══ TRACKER ═══ -->
+<div id="tracker" class="section active">
+  <div class="alert-banner" id="overdueAlert">
+    <strong id="overdueAlertTitle">Computing overdue items...</strong>
+    <span id="overdueAlertBody"></span>
+  </div>
+  <div class="filter-bar">
+    <div class="ms" id="msState">
+      <button class="ms-btn" onclick="toggleMs('msState',event)">All States <span>▾</span></button>
+      <div class="ms-drop">
+        <label class="ms-opt"><input type="checkbox" value="Central" onchange="filterTable()"> Central</label>
+        <label class="ms-opt"><input type="checkbox" value="Maharashtra" onchange="filterTable()"> Maharashtra</label>
+        <label class="ms-opt"><input type="checkbox" value="Uttar Pradesh" onchange="filterTable()"> Uttar Pradesh</label>
+      </div>
+    </div>
+    <div class="ms" id="msPriority">
+      <button class="ms-btn" onclick="toggleMs('msPriority',event)">All Priorities <span>▾</span></button>
+      <div class="ms-drop">
+        <label class="ms-opt"><input type="checkbox" value="Critical" onchange="filterTable()"> Critical</label>
+        <label class="ms-opt"><input type="checkbox" value="High" onchange="filterTable()"> High</label>
+        <label class="ms-opt"><input type="checkbox" value="Medium" onchange="filterTable()"> Medium</label>
+        <label class="ms-opt"><input type="checkbox" value="Low" onchange="filterTable()"> Low</label>
+      </div>
+    </div>
+    <div class="ms" id="msStatus">
+      <button class="ms-btn" onclick="toggleMs('msStatus',event)">All Statuses <span>▾</span></button>
+      <div class="ms-drop">
+        <label class="ms-opt"><input type="checkbox" value="Overdue" onchange="filterTable()"> ⚠ Overdue</label>
+        <label class="ms-opt"><input type="checkbox" value="Open" onchange="filterTable()"> Open</label>
+        <label class="ms-opt"><input type="checkbox" value="In Progress" onchange="filterTable()"> In Progress</label>
+        <label class="ms-opt"><input type="checkbox" value="Done" onchange="filterTable()"> ✓ Done</label>
+      </div>
+    </div>
+    <div class="ms" id="msArea">
+      <button class="ms-btn" onclick="toggleMs('msArea',event)">All Areas <span>▾</span></button>
+      <div class="ms-drop">
+        <label class="ms-opt"><input type="checkbox" value="POSH" onchange="filterTable()"> POSH</label>
+        <label class="ms-opt"><input type="checkbox" value="PF / ESI" onchange="filterTable()"> PF / ESI</label>
+        <label class="ms-opt"><input type="checkbox" value="Wages" onchange="filterTable()"> Wages</label>
+        <label class="ms-opt"><input type="checkbox" value="IR Code" onchange="filterTable()"> IR Code</label>
+        <label class="ms-opt"><input type="checkbox" value="OSH" onchange="filterTable()"> OSH</label>
+        <label class="ms-opt"><input type="checkbox" value="Social Security" onchange="filterTable()"> Social Security</label>
+        <label class="ms-opt"><input type="checkbox" value="Professional Tax" onchange="filterTable()"> Professional Tax</label>
+        <label class="ms-opt"><input type="checkbox" value="Gig Workers" onchange="filterTable()"> Gig Workers</label>
+        <label class="ms-opt"><input type="checkbox" value="Contract Labour" onchange="filterTable()"> Contract Labour</label>
+        <label class="ms-opt"><input type="checkbox" value="Employment Law" onchange="filterTable()"> Employment Law</label>
+      </div>
+    </div>
+    <label class="new-chk"><input type="checkbox" id="fNew" onchange="filterTable()"> New This Session</label>
+    <button onclick="clearFilters()" class="clear-btn">✕ Clear</button>
+    <button onclick="filterTable()">Apply</button>
+    <button class="refresh-btn" onclick="loadStatuses()">↻ Sync</button>
+    <span id="syncStatus"></span>
+  </div>
+  <div class="table-wrap">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>🆕</th>
+          <th>Area</th>
+          <th>Regulation / Obligation</th>
+          <th>State</th>
+          <th>Action Required</th>
+          <th>Owner</th>
+          <th>Due Date</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Notes / Action Taken</th>
+          <th>Risk</th>
+          <th>Source</th>
+          <th>Month</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="last-updated">Last synced: <span id="lastSyncTime">—</span> | v3.5 — All documents reviewed: NL-98 to NL-118, Monthly Mar/Jun/Jul/Aug 2026, EPFO Circulars, Labour Code Central Rules, EPFO UMANG Doc, EPFO PF Withdrawal Infographic, NCW POSH Advisory, Labour Code FAQs, Labour Codes Implementation Presentation</div>
+</div>
+
+<!-- ═══ CALENDAR ═══ -->
+<div id="calendar" class="section">
+  <h2 class="section-title">August 2026 Compliance Calendar — UP &amp; Maharashtra</h2>
+  <div class="status-bar">
+    <div class="status-block"><div class="sb-label">Aug 15 (9 days)</div><div class="sb-status" style="color:var(--red)">⬤ 3 items critical</div></div>
+    <div class="status-block"><div class="sb-label">Aug 31</div><div class="sb-status" style="color:var(--amber)">⬤ Enrolment Campaign</div></div>
+    <div class="status-block"><div class="sb-label">Sep 5</div><div class="sb-status" style="color:var(--amber)">⬤ ESI Regulations</div></div>
+    <div class="status-block"><div class="sb-label">Dec 29</div><div class="sb-status" style="color:var(--blue)">⬤ VISHWAS / PF Trust</div></div>
+    <div class="status-block"><div class="sb-label">Many Items OVERDUE</div><div class="sb-status" style="color:var(--red)">⬤ Escalate Now</div></div>
+  </div>
+
+  <h3 class="sub-title" style="color:var(--red)">⚠ OVERDUE — Missed Deadlines (as of Aug 6, 2026)</h3>
+  <div class="table-wrap" style="margin-bottom:16px">
+    <table><thead><tr><th>Was Due</th><th>Obligation</th><th>State</th><th>Priority</th><th>Owner</th><th>Immediate Action</th></tr></thead>
+      <tbody>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jun 9</td><td>POSH Act — MH Inspection ICC Audit + She-Box</td><td><span class="badge badge-mh">MH</span></td><td><span class="badge badge-critical">CRITICAL</span></td><td>HR / Legal</td><td>Complete NOW. Inspection officers active since May 14.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jun 15</td><td>NATS Stipend Revision — effective Apr 1 2026</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-high">HIGH</span></td><td>HR / Finance</td><td>Update apprentice stipend retroactively from Apr 1 2026.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jun 30</td><td>Maharashtra PT Employer Enrolment Tax (Apr 25–Mar 26)</td><td><span class="badge badge-mh">MH</span></td><td><span class="badge badge-high">HIGH</span></td><td>Payroll</td><td>Pay with penalty immediately.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jul 8</td><td>Code on Wages (Central) Rules 2026 — Internal Audit</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-critical">CRITICAL</span></td><td>HR / Legal</td><td>Assign taskforce. Escalate to CHRO. Corrigendum Jul 15 noted.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jul 8</td><td>Model Standing Orders — IR Code 2020 Certification</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-critical">CRITICAL</span></td><td>HR / Legal</td><td>Engage Certifying Officer immediately. 300+ threshold crossed.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jul 8</td><td>Principal Employer Contractor Bonus Audit</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-high">HIGH</span></td><td>HR / Procurement</td><td>Audit all contractor agreements. Verify 8.33% bonus payment.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jul 8</td><td>IR Code Amendment — Repeal of Legacy Labour Laws Audit</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-critical">CRITICAL</span></td><td>Legal / HR</td><td>Audit all legacy Act references in policies and contracts.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jul 15</td><td>EPF Scheme 2026 / EPS 2026 / EDLI Scheme 2026 — Transition</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-critical">CRITICAL</span></td><td>Payroll / Finance</td><td>Confirm payroll processes are on new Scheme 2026 framework NOW.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Jul 22</td><td>EPFO UMANG FAT — UAN Generation SOP Update</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-high">HIGH</span></td><td>HR Ops / Payroll</td><td>Verify onboarding SOP mandates UMANG FAT. Train HR Ops team.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Aug 1</td><td>Maharashtra Draft OSH Rules 2026 — Review</td><td><span class="badge badge-mh">MH</span></td><td><span class="badge badge-medium">MEDIUM</span></td><td>HR / Legal</td><td>Comment window may have passed. Brief legal team on final rules.</td></tr>
+        <tr style="background:#fff8f8"><td style="color:var(--red);font-weight:700">Aug 6</td><td>Appointment Letters — Mandatory for All Employees</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-critical">CRITICAL</span></td><td>HR Operations</td><td>Issue appointment letters to all employees immediately. Update SOP.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sub-title">August 2026 — Upcoming Deadlines</h3>
+  <div class="table-wrap" style="margin-bottom:16px">
+    <table><thead><tr><th>Due Date</th><th>Obligation</th><th>State</th><th>Mode</th><th>Priority</th><th>Owner</th></tr></thead>
+      <tbody>
+        <tr><td><strong style="color:var(--red)">Aug 15</strong></td><td>EPF Scheme 2026 — Monthly Contribution (July 2026)</td><td><span class="badge badge-central">All States</span></td><td>Online — New Scheme Framework</td><td><span class="badge badge-critical">Critical</span></td><td>Payroll / Finance</td></tr>
+        <tr><td><strong style="color:var(--red)">Aug 15</strong></td><td>ESI — Monthly Contribution (July 2026)</td><td><span class="badge badge-central">All States</span></td><td>Online</td><td><span class="badge badge-high">High</span></td><td>Payroll / Finance</td></tr>
+        <tr><td><strong style="color:var(--red)">Aug 15</strong></td><td>Maharashtra PT Act — Monthly Remittance &amp; Return (July 2026)</td><td><span class="badge badge-mh">MH</span></td><td>Online (Combined)</td><td><span class="badge badge-high">High</span></td><td>Payroll</td></tr>
+        <tr><td><strong style="color:var(--amber)">Aug 25</strong></td><td>EPF — EDLI Exempted Employer Monthly Return (July 2026)</td><td><span class="badge badge-central">All States</span></td><td>Offline</td><td><span class="badge badge-medium">Medium</span></td><td>HR Compliance</td></tr>
+        <tr><td><strong style="color:var(--amber)">Aug 31</strong></td><td>Employees Enrolment Campaign 2026 — Close UAN Gaps</td><td><span class="badge badge-central">Central</span></td><td>Internal + EPFO Portal</td><td><span class="badge badge-high">High</span></td><td>HR Operations</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sub-title">September–December 2026 — Key Deadlines</h3>
+  <div class="table-wrap">
+    <table><thead><tr><th>Due Date</th><th>Obligation</th><th>State</th><th>Priority</th><th>Owner</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Sep 1</strong></td><td>RPD Act 2016 — Disability Policy Update (Acid Attack Victim Definition)</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-medium">Medium</span></td><td>HR / D&amp;I</td></tr>
+        <tr><td><strong>Sep 5</strong></td><td>ESI (General) Regulations 2026 — 45-Day Comment Window Closes</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-high">High</span></td><td>Legal / HR Compliance</td></tr>
+        <tr><td><strong>Sep 6</strong></td><td>Maharashtra Child Labour (Amendment) Rules 2025 — Compliance</td><td><span class="badge badge-mh">MH</span></td><td><span class="badge badge-medium">Medium</span></td><td>HR Compliance</td></tr>
+        <tr><td><strong>Sep 30</strong></td><td>UP Draft Labour Code Rules — Monitor Finalization</td><td><span class="badge badge-up">UP</span></td><td><span class="badge badge-medium">Medium</span></td><td>HR / Legal</td></tr>
+        <tr><td><strong>Sep 30</strong></td><td>ESI Wages Definition Alignment (Section 2(88) SS Code)</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-high">High</span></td><td>Payroll / Legal</td></tr>
+        <tr><td><strong>Sep 30</strong></td><td>Canteen Facility — 100+ Workers (OSH Code)</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-high">High</span></td><td>Admin / HR</td></tr>
+        <tr><td><strong>Sep 30</strong></td><td>Shram Suvidha Registration Audit</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-high">High</span></td><td>HR Compliance</td></tr>
+        <tr><td><strong>Dec 29</strong></td><td>VISHWAS 2026 — EPFO PF Damages Settlement Window</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-medium">Medium</span></td><td>Finance / Legal</td></tr>
+        <tr><td><strong>Dec 29</strong></td><td>EPFO PF Trust Amnesty Scheme — Regularise Trust Status</td><td><span class="badge badge-central">Central</span></td><td><span class="badge badge-medium">Medium</span></td><td>Finance / Legal</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ EXECUTIVE SUMMARY ═══ -->
+<div id="executive" class="section">
+  <div class="alert-banner">
+    <strong>CHRO Briefing | August 6, 2026 | 51 Items Across All Documents | 12 New This Session</strong>
+    Three immediate escalations: (1) EPF/EPS/EDLI 2026 scheme transition is overdue — confirm payroll migrated to new framework before Aug 15. (2) Appointment Letters for all employees are now mandatory and overdue. (3) POSH Maharashtra inspection compliance is overdue since June 9 — Board-level risk if inspected.
+  </div>
+  <div class="card-grid">
+
+    <div class="card border-red">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-critical">CRITICAL — OVERDUE</span></div>
+      <h3>EPF / EPS / EDLI Scheme 2026 — Core PF Architecture Replaced</h3>
+      <div class="card-meta">MoLE G.S.R. 525/526/527(E) | June 29, 2026 | Deadline: July 15</div>
+      <p>All three foundational PF schemes are superseded. EPS rate 8.33%, EDLI rate 0.5%, EPF interest 8.25% for FY 2025-26. Any payroll system still operating under EPF Scheme 1952, EPS 1995, or EDLI 1976 is in statutory violation. Aug 15 contribution deadline must be filed under new framework.</p>
+      <div class="card-footer"><span class="badge badge-critical">Payroll Transition</span><span class="badge badge-central">Central</span><span class="badge badge-overdue">OVERDUE</span></div>
+    </div>
+
+    <div class="card border-red">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-critical">CRITICAL — OVERDUE</span><span class="badge badge-new">NEW</span></div>
+      <h3>Appointment Letters — Mandatory for All Employees Under Central Rules 2026</h3>
+      <div class="card-meta">Labour Code (Central) Rules | May 8, 2026 | Overdue Aug 6</div>
+      <p>Central Rules 2026 (effective Nov 21, 2025) mandate formal appointment letters for all employees. Any employee without a letter is a statutory compliance gap. HR Operations must verify all 1,500 employees have received compliant letters and update the onboarding SOP immediately.</p>
+      <div class="card-footer"><span class="badge badge-critical">Statutory Mandatory</span><span class="badge badge-central">Central</span><span class="badge badge-overdue">OVERDUE</span></div>
+    </div>
+
+    <div class="card border-red">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-critical">CRITICAL — OVERDUE</span></div>
+      <h3>POSH Maharashtra — Inspection Officers Active, Compliance Overdue</h3>
+      <div class="card-meta">MH WCD Circular | May 14, 2026 | Overdue since June 9</div>
+      <p>MH State Commission for Women authorized inspection officers to inspect establishments under POSH Act. ICC verification, She-Box registration, and compliance checklist are overdue. Penalty: ₹50,000 fine + recommendation for licence suspension. Any inspection finding non-compliance creates a Board-level incident.</p>
+      <div class="card-footer"><span class="badge badge-critical">Criminal Liability</span><span class="badge badge-mh">Maharashtra</span><span class="badge badge-overdue">OVERDUE</span></div>
+    </div>
+
+    <div class="card border-red">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-critical">CRITICAL — OVERDUE</span></div>
+      <h3>Model Standing Orders — IR Code 2020 — Certification Overdue</h3>
+      <div class="card-meta">MoLE S.O. 2312(E) | May 8, 2026 | Due July 8</div>
+      <p>BusinessNext (1,500 employees, above 300-worker threshold) must file certified Standing Orders under the IR Code 2020 framework. The old Standing Orders Act 1946 is repealed. Non-filing exposes the organisation and its officers to Section 86 penalties. Standing Orders must also be available in Hindi, English, and local language.</p>
+      <div class="card-footer"><span class="badge badge-critical">IR Enforcement</span><span class="badge badge-central">Central</span><span class="badge badge-overdue">OVERDUE</span></div>
+    </div>
+
+    <div class="card border-amber">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-high">HIGH — DUE AUG 15</span></div>
+      <h3>Employees Enrolment Campaign 2026 — UAN Gap Closure by Aug 31</h3>
+      <div class="card-meta">MoLE No. EEC/2025 | July 8, 2026 | Closes Aug 31</div>
+      <p>EPFO has mandated an employer-driven enrolment drive. All 1,500 employees must have valid UANs. New joiners since Aug 1 2025 must have UANs generated via UMANG FAT. HR must audit enrolment status, set up a helpdesk, and file declarations for any gaps before August 31. Inspectors will verify enrolment compliance.</p>
+      <div class="card-footer"><span class="badge badge-high">Enrolment Compliance</span><span class="badge badge-central">Central</span><span class="badge badge-open">Act Before Aug 31</span></div>
+    </div>
+
+    <div class="card border-amber">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-high">HIGH — DUE SEP 5</span></div>
+      <h3>ESI (General) Regulations 2026 — 45-Day Comment Window Open</h3>
+      <div class="card-meta">ESIC No. X-1101/31/2026 | July 22, 2026 | Closes Sep 5</div>
+      <p>New ESI Regulations in supersession of 1950 Regulations are in draft. ESIC published old-vs-new comparison. Legal must review process changes for ESI deductions, benefit eligibility, and employer obligations. Separately, all ESI contributions must already use the "wages" definition under Section 2(88) of SS Code 2020 — not the old ESI Act definition.</p>
+      <div class="card-footer"><span class="badge badge-high">ESI Transition</span><span class="badge badge-central">Central</span><span class="badge badge-open">Comment Window</span></div>
+    </div>
+
+    <div class="card border-amber">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-high">HIGH</span><span class="badge badge-new">NEW</span></div>
+      <h3>Canteen Facility — Mandatory for 100+ Workers (OSH Code 2020)</h3>
+      <div class="card-meta">Labour Code (Central) OSH Rules | May 8, 2026</div>
+      <p>BusinessNext with 1,500 employees substantially exceeds the 100-worker threshold. OSH Code Central Rules mandate canteen provision. If a full canteen is not feasible, an equivalent arrangement is required. Non-compliance is an inspection-triggering violation. Admin and HR must verify canteen arrangement status and document compliance.</p>
+      <div class="card-footer"><span class="badge badge-high">Statutory Facility</span><span class="badge badge-central">Central</span><span class="badge badge-open">Due Sep 30</span></div>
+    </div>
+
+    <div class="card border-amber">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-high">HIGH</span><span class="badge badge-new">NEW</span></div>
+      <h3>Maharashtra Gig and Platform Workers Rights and Protection Bill 2026</h3>
+      <div class="card-meta">Maharashtra Govt | July 3, 2026</div>
+      <p>For an AI-first company, this Bill carries strategic significance. It mandates fair wages, social security, and protection from exploitation of digital management systems for gig and platform workers. Any gig, freelance, or platform-based engagement in Maharashtra must be assessed. Telangana's equivalent Act is already in force since June 2 2026 — the national regulatory direction is clear.</p>
+      <div class="card-footer"><span class="badge badge-high">AI-First Strategy Risk</span><span class="badge badge-mh">Maharashtra</span><span class="badge badge-open">Assess Now</span></div>
+    </div>
+
+    <div class="card border-blue">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-medium">OPPORTUNITY — CLOSES DEC 29</span><span class="badge badge-new">NEW</span></div>
+      <h3>VISHWAS 2026 — One-Time EPFO Damages Settlement</h3>
+      <div class="card-meta">EPFO Circular | July 9, 2026 | Window: Jun 29 – Dec 29, 2026</div>
+      <p>If BusinessNext has any pending EPFO damage orders under Section 14B / Section 128, VISHWAS 2026 allows settlement at reduced, graded rates within a 6-month window. This is a strictly one-time opportunity. Finance and Legal must audit EPFO damage orders immediately and evaluate settlement viability. Missing this window means full liability.</p>
+      <div class="card-footer"><span class="badge badge-medium">Financial Opportunity</span><span class="badge badge-central">Central</span><span class="badge badge-open">Closes Dec 29</span></div>
+    </div>
+
+    <div class="card border-blue">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-medium">OPPORTUNITY — CLOSES DEC 29</span><span class="badge badge-new">NEW</span></div>
+      <h3>EPFO PF Trust Amnesty Scheme 2026</h3>
+      <div class="card-meta">MoLE Press Release | July 12, 2026 | Window: Jun 29 – Dec 29, 2026</div>
+      <p>EPFO has introduced a one-time amnesty for establishments operating informal PF Trusts under the Income Tax Act 1961 without a formal EPFO exemption notification. If BusinessNext has any such trust, this window must be used to regularise status. Finance must verify and Legal must assess applicability before this window closes.</p>
+      <div class="card-footer"><span class="badge badge-medium">Compliance Regularisation</span><span class="badge badge-central">Central</span><span class="badge badge-open">Closes Dec 29</span></div>
+    </div>
+
+    <div class="card border-amber">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-high">HIGH</span><span class="badge badge-new">NEW</span></div>
+      <h3>Shram Suvidha Registration Audit — Labour Code Framework Migration</h3>
+      <div class="card-meta">Labour Code (Central) Rules | May 8, 2026</div>
+      <p>All establishment registrations, licences, and filings currently held under legacy Acts (Shops &amp; Establishments, Contract Labour, etc.) must be reviewed and transitioned to the new Labour Code framework on the Shram Suvidha Portal. Operating under legacy registrations after Labour Code enforcement is a structural compliance gap.</p>
+      <div class="card-footer"><span class="badge badge-high">Registration Risk</span><span class="badge badge-central">Central</span><span class="badge badge-open">Due Sep 30</span></div>
+    </div>
+
+    <div class="card border-amber">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-high">HIGH</span><span class="badge badge-new">NEW</span></div>
+      <h3>ESI Wages Definition Alignment — Section 2(88) SS Code 2020</h3>
+      <div class="card-meta">ESIC Regional Director Clarification | June 4, 2026</div>
+      <p>ESIC formally clarified that ESI contribution deductions must use the "wages" definition under Section 2(88) of the Code on Social Security 2020 — not the old ESI Act 1948 definition. The two definitions may differ in scope. Payroll systems using the old definition risk both underpayment (with interest exposure) and overpayment recoveries. Payroll audit is mandatory.</p>
+      <div class="card-footer"><span class="badge badge-high">Payroll Configuration</span><span class="badge badge-central">Central</span><span class="badge badge-open">Due Aug 15</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ RISK REGISTER ═══ -->
+<div id="risk" class="section">
+  <h2 class="section-title">Compliance Risk Register — BusinessNext | Aug 6, 2026</h2>
+  <div class="alert-banner">
+    <strong>7 Critical-level items and 21 High-level items are currently tracked. Multiple Critical items are past their deadline.</strong>
+    Immediate CHRO-level escalation required for EPF/EPS/EDLI scheme transition, Appointment Letters, POSH Maharashtra, and Model Standing Orders.
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th>#</th><th>Risk</th><th>Area</th><th>State</th><th>Legal Exposure</th><th>Financial Exposure</th><th>Level</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>R1</td><td>EPF/EPS/EDLI Scheme 2026 — administering PF under superseded schemes</td><td>PF / ESI</td><td><span class="badge badge-central">Central</span></td><td>EPFO audit findings; statutory violation; employee grievances</td><td>Retrospective interest @12% p.a. on all mis-administered amounts</td><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R2</td><td>Appointment Letters not issued — statutory violation under Labour Codes</td><td>Employment Law</td><td><span class="badge badge-central">Central</span></td><td>OSH Code / IR Code inspection-triggering violation</td><td>Per-employee penalty; potential prosecution of officers</td><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R3</td><td>POSH MH non-compliance — inspection officer active</td><td>POSH</td><td><span class="badge badge-mh">MH</span></td><td>Criminal liability; ₹50,000 fine; licence cancellation recommendation</td><td>Reputational damage; Director liability</td><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R4</td><td>Standing Orders not certified under IR Code 2020 — legacy act repealed</td><td>IR Code</td><td><span class="badge badge-central">Central</span></td><td>Section 86 IR Code penalty; officer prosecution</td><td>Fines; litigation exposure from workers</td><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R5</td><td>Code on Wages 2026 — wage structure not audited against new rules</td><td>Wages</td><td><span class="badge badge-central">Central</span></td><td>Underpayment claims; labour authority enforcement</td><td>Back-wage liability; penalty for minimum wage violations</td><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R6</td><td>IR Code Amendment — policies still reference repealed Acts</td><td>IR Code</td><td><span class="badge badge-central">Central</span></td><td>Operating under repealed legal framework</td><td>Legal challenge exposure; void contractual clauses</td><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R7</td><td>ESI wages definition mismatch — incorrect deduction basis</td><td>PF / ESI</td><td><span class="badge badge-central">Central</span></td><td>ESIC inspection; underpayment recovery order</td><td>Retrospective recovery + 12% p.a. interest</td><td><span class="badge badge-critical">CRITICAL</span></td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>R8</td><td>UAN not generated via UMANG FAT for new joiners since Aug 1 2025</td><td>PF / ESI</td><td><span class="badge badge-central">Central</span></td><td>EPF remittance rejection for employees without valid UAN</td><td>Interest on delayed EPF contributions</td><td><span class="badge badge-high">HIGH</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R9</td><td>Canteen facility absent — 100+ worker threshold crossed</td><td>OSH</td><td><span class="badge badge-central">Central</span></td><td>OSH Code inspection violation; welfare non-compliance</td><td>Per-day default penalty under OSH Code</td><td><span class="badge badge-high">HIGH</span></td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>R10</td><td>Works Committee and GRC not constituted — mandatory at 300+ workers</td><td>IR Code</td><td><span class="badge badge-central">Central</span></td><td>Statutory non-compliance; absence of mandatory body</td><td>Penalty for non-constitution</td><td><span class="badge badge-high">HIGH</span></td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>R11</td><td>Contractor bonus default — principal employer direct liability</td><td>Contract Labour</td><td><span class="badge badge-central">Central</span></td><td>OSH Code principal employer liability provision</td><td>Bonus payment liability for all contractors in default</td><td><span class="badge badge-high">HIGH</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R12</td><td>MH VDA — contract workers underpaid Jan–Jun 2026</td><td>Wages</td><td><span class="badge badge-mh">MH</span></td><td>Minimum wage violation; labour authority enforcement</td><td>Differential wage liability + penalty</td><td><span class="badge badge-high">HIGH</span></td><td><span class="badge badge-overdue">OVERDUE</span></td></tr>
+        <tr><td>R13</td><td>Gig worker obligations — AI-first company strategy risk (MH + Telangana)</td><td>Gig Workers</td><td><span class="badge badge-mh">MH</span></td><td>MH Gig Workers Bill (Bill stage); Telangana Act in force</td><td>Social security, fair wage obligations for gig workforce</td><td><span class="badge badge-medium">MEDIUM</span></td><td><span class="badge badge-open">Monitor</span></td></tr>
+        <tr><td>R14</td><td>Nomination records — invalid non-family nominations in legacy records</td><td>Employment Law</td><td><span class="badge badge-central">Central</span></td><td>Benefit payment dispute on employee death/exit</td><td>Legal challenge to nominee payment validity</td><td><span class="badge badge-medium">MEDIUM</span></td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>R15</td><td>Shram Suvidha registrations — still on legacy Act framework</td><td>Registration</td><td><span class="badge badge-central">Central</span></td><td>Non-recognition under new Labour Code framework</td><td>Re-registration costs; operational disruption</td><td><span class="badge badge-high">HIGH</span></td><td><span class="badge badge-open">Open</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ OPPORTUNITIES ═══ -->
+<div id="opportunities" class="section">
+  <h2 class="section-title">Compliance Opportunities — Act Before Windows Close</h2>
+  <div class="card-grid">
+    <div class="card border-blue new-card">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-medium">OPPORTUNITY</span><span class="badge badge-new">NEW</span></div>
+      <h3>VISHWAS 2026 — EPFO One-Time PF Damages Settlement</h3>
+      <div class="card-meta">EPFO Circular | Effective Jun 29, 2026 | Closes Dec 29, 2026</div>
+      <p><strong>What:</strong> EPFO launched a one-time 6-month window for establishments to settle pending damage orders under Section 14B (EPF Act) or Section 128 (SS Code 2020) at reduced, graded rates — substantially lower than full quantum.</p>
+      <p style="margin-top:6px"><strong>Why it matters:</strong> If BusinessNext has any past EPFO damage orders (common where contributions were delayed), this is a strictly one-time opportunity. Full damages apply after December 29.</p>
+      <p style="margin-top:6px"><strong>Action:</strong> Finance and Legal to audit all EPFO damage orders within 2 weeks. Evaluate settlement vs. contest. Apply before the window closes.</p>
+      <div class="card-footer"><span class="badge badge-medium">Closes Dec 29, 2026</span><span class="badge badge-central">Central</span></div>
+    </div>
+
+    <div class="card border-blue new-card">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-medium">OPPORTUNITY</span><span class="badge badge-new">NEW</span></div>
+      <h3>EPFO PF Trust Amnesty Scheme 2026</h3>
+      <div class="card-meta">MoLE Press Release | Jul 12, 2026 | Closes Dec 29, 2026</div>
+      <p><strong>What:</strong> Establishments operating informal PF Trusts (under IT Act recognition but without formal EPFO exemption notification) can regularise their status under this amnesty — a one-time window of 6 months from June 29, 2026.</p>
+      <p style="margin-top:6px"><strong>Why it matters:</strong> Post-amnesty, informal trusts operating without formal exemption will be treated as non-compliant establishments under EPF Scheme 2026, with full enforcement consequences.</p>
+      <p style="margin-top:6px"><strong>Action:</strong> Finance to verify if BusinessNext operates any PF Trust under IT Act recognition. If yes, Legal to initiate amnesty application immediately.</p>
+      <div class="card-footer"><span class="badge badge-medium">Closes Dec 29, 2026</span><span class="badge badge-central">Central</span></div>
+    </div>
+
+    <div class="card border-green">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-low">PROCESS EFFICIENCY</span></div>
+      <h3>Contract Labour Single Multi-State Licence</h3>
+      <div class="card-meta">OSH Code Central Rules 2026 | May 8, 2026</div>
+      <p><strong>What:</strong> The OSH Code Central Rules 2026 introduce a single multi-state licence facility for contract labour principals operating across multiple states — replacing the need for state-specific licences in each location.</p>
+      <p style="margin-top:6px"><strong>Why it matters:</strong> BusinessNext operates in UP and Maharashtra. Consolidating contract labour licences reduces administrative overhead, renewal risk, and cost.</p>
+      <p style="margin-top:6px"><strong>Action:</strong> HR/Legal to evaluate consolidation under the new single-licence facility.</p>
+      <div class="card-footer"><span class="badge badge-low">Process Optimisation</span><span class="badge badge-central">Central</span></div>
+    </div>
+
+    <div class="card border-green">
+      <div style="display:flex;gap:5px;margin-bottom:7px"><span class="badge badge-low">ADVISORY</span></div>
+      <h3>ESIC Health Connect App — Employee Communication Drive</h3>
+      <div class="card-meta">ESIC e-file | Feb 2026</div>
+      <p>The revamped ESIC Health Connect app supports Aadhaar seeding, appointment booking, and e-health records. A structured employee communication drive not only fulfils welfare obligations but also accelerates Aadhaar seeding compliance for ESIC — which directly reduces employer's benefit-denial risk during inspections.</p>
+      <div class="card-footer"><span class="badge badge-low">Employee Welfare</span><span class="badge badge-central">Central</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EXCLUSION LOG ═══ -->
+<div id="exclusions" class="section">
+  <h2 class="section-title">Exclusion Log — Items Reviewed and Found Not Applicable</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Document</th><th>Content / Regulation</th><th>Reason for Exclusion</th></tr></thead>
+      <tbody class="exclusion-row">
+        <tr><td>Core Integra Monthly Newsletter — June 2026 (EHS)</td><td>All 44 pages — FSSAI, Motor Vehicles, Pollution Control, Air Quality, Electricity safety content</td><td>EHS/Environment sector only. Not applicable to IT product company. No HR/Labour/Employment content found.</td></tr>
+        <tr><td>NL-98 / NL-99 / NL-104 to NL-115</td><td>Karnataka, Tamil Nadu, Kerala, Gujarat, Telangana, Andhra Pradesh, Bihar, Rajasthan, WB, Haryana, MP, Punjab, Assam, Meghalaya, Tripura minimum wage notifications</td><td>State-specific minimum wage revisions for states where BusinessNext has no operations. UP and Maharashtra VDA captured separately (IDs 22, 24).</td></tr>
+        <tr><td>NL-106 (May 11-17, 2026)</td><td>Audio-visual worker remuneration definition (Rs.19,000/month ceiling); OSH provisions for mines; Goa OSH Rules draft</td><td>Audio-visual worker category not applicable to IT/product company. Mines provisions entirely excluded. Goa is not a BusinessNext operating state.</td></tr>
+        <tr><td>NL-106 / NL-107</td><td>Delhi WFH advisory; Delhi heat wave advisory for electrical workmen</td><td>Advisory for Delhi establishments and government electrical workers. Not applicable — BusinessNext does not have Delhi operations, and IT office WFH is already established practice.</td></tr>
+        <tr><td>NL-107 (May 18-24, 2026)</td><td>Bakrid holiday notifications for Assam, Jharkhand, Tripura, WB, Meghalaya, AP; Haryana heat wave advisory; Goa bye-election holiday; Uttarakhand Social Security Rules</td><td>State-specific for non-operating states. Haryana, Goa, Uttarakhand, Jharkhand not applicable to BusinessNext. UP Bakrid shift captured as ID 13.</td></tr>
+        <tr><td>NL-113 / NL-114 / NL-115</td><td>Rajasthan OSH Code rules; Chandigarh IR/OSH/SS Rules; Bihar Shops Repeal Act; Telangana Gig Workers Act 2026; Bihar Labour Code Rules; Lakshadweep Code on Wages Rules; Andaman &amp; Nicobar Shops &amp; Establishment Rules</td><td>States/UTs outside UP and Maharashtra. Telangana Gig Workers Act noted as a trend indicator but the Act itself is Telangana-specific — MH Bill (ID 49) captures the applicable item.</td></tr>
+        <tr><td>NL-115 / Aug-26 Monthly</td><td>Corrigendum to Code on Wages (Central) Rules 2026 — typographic correction (G.S.R. 629(E))</td><td>Typographic correction only. No change to substantive obligations. Noted in the source reference for ID 3 (Code on Wages audit).</td></tr>
+        <tr><td>NL-114 / Aug-26 Monthly</td><td>OSH Code Rules 111(1), 111(2), 111(4), 131(2), 163(3), 163(4), 164, 165(1), 169, 172(1)(2) — mines-specific medical examination and training centre specifications</td><td>Directorate General of Mines Safety rules applicable exclusively to mines sector. BusinessNext is an IT company. Entirely excluded.</td></tr>
+        <tr><td>Aug-26 Monthly</td><td>West Bengal Code on Wages / OSH / Social Security / IR Rules 2026 (all 4 drafts); Andhra Pradesh SS Code Rules (final); Rajasthan IR Code Amendment Act; Rajasthan OSH Rules (final); Bihar Labour Code Rules (all 4 final); Chandigarh Labour Code Rules</td><td>State-specific rules for non-operating states. Not applicable to BusinessNext.</td></tr>
+        <tr><td>Aug-26 Monthly</td><td>Bihar pension and disability pension enhancement (construction workers); Delhi wage payment advisory (government establishments); Madhya Pradesh Labour Welfare Fund contribution revision; Dadra &amp; Nagar Haveli Labour Code Rules</td><td>Bihar: construction workers only. Delhi: applies to government establishments / Finance Dept direction. MP and UT of DNH: non-operating states/territories.</td></tr>
+        <tr><td>Aug-26 Monthly / Jul-26 Monthly</td><td>Dock Workers Act amendments; Apprentices Act amendments; Transgender Persons Act delegation to Ladakh; ESIC Lakshadweep Islands medical benefit extension</td><td>Dock Workers Act — Port/maritime sector only. Apprentices Act — only ID 12 (NATS stipend) captured as applicable. Ladakh and Lakshadweep — UTs not in scope.</td></tr>
+        <tr><td>All Newsletters</td><td>High Court and Supreme Court judgements in general section</td><td>Judgements are case-law references for awareness only. Individual case facts do not constitute compliance obligations for BusinessNext. Reviewed; no new actionable obligation identified beyond existing items.</td></tr>
+        <tr><td>compliance.docx</td><td>Full document — Compliance Agent Specification, Skill Inventory, System Prompt Rules</td><td>This is the design specification document for the compliance agent itself. Not a regulatory source. No action items.</td></tr>
+        <tr><td>Compliance_Lists_Setup_Guide.docx</td><td>Microsoft Lists / Teams integration setup guide for compliance tracker</td><td>This is a setup/how-to guide for alternative tracker implementation. No regulatory content. No new action items. BusinessNext is using Supabase-backed HTML dashboard instead.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SUPABASE CONFIGURATION
+// ═══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://oviboktiounvchxqortz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_HFpFoUk_QzUvnY2rhwLdYQ_XzCHoSkZ';
+let db = null;
+const TODAY = new Date('2026-09-03');
+
+// ═══════════════════════════════════════════════════════════
+// MASTER ACTIONS ARRAY — v3.0 — 51 ITEMS
+// ═══════════════════════════════════════════════════════════
+const actions = [
+  {id:1,  area:'POSH', reg:'POSH Act 2013 — MH Inspection Activated', state:'Maharashtra', action:'Verify ICC constitution, She-Box registration, and prepare compliance checklist response per MH WCD inspection checklist', owner:'HR / Legal', due:'2026-06-09', priority:'Critical', status:'Open', risk:'Criminal liability / ₹50K fine / Licence suspension', source:'MH WCD Circular, May 14 2026', month:'May 2026 (NL-107)', isNew:false},
+  {id:2,  area:'IR Code', reg:'Model Standing Orders — IR Code 2020 Certification', state:'Central', action:'Review existing Standing Orders against Model S.O. 2312(E); engage Certifying Officer for certification; make available in Hindi, English, and Marathi/Hindi', owner:'HR / Legal', due:'2026-07-08', priority:'Critical', status:'Open', risk:'Section 86 IR Code penalty; officer prosecution', source:'MoLE S.O. 2312(E), May 8 2026', month:'May 2026 (NL-105)', isNew:false},
+  {id:3,  area:'Wages', reg:'Code on Wages (Central) Rules 2026 — Internal Audit', state:'Central', action:'Audit wage structures, payment processes, and records against new Rules incl. Jul 15 Corrigendum G.S.R. 629(E); update payroll SOPs', owner:'HR / Legal', due:'2026-07-08', priority:'Critical', status:'Open', risk:'Statutory wage violation; minimum wage underpayment penalties', source:'MoLE G.S.R. 343(E), May 8 2026; Corrigendum Jul 15 2026', month:'May 2026 (NL-105); Jul 2026 (NL-115)', isNew:false},
+  {id:4,  area:'PF / ESI', reg:'EPF Scheme 2026 — Monthly Contribution (Aug 2026)', state:'Central', action:'Remit EPF contribution for July 2026 by August 15, 2026 under the new EPF Scheme 2026 framework (not 1952 Scheme)', owner:'Payroll / Finance', due:'2026-08-15', priority:'High', status:'Open', risk:'Interest @12% p.a. mandatory under SS Code Section 127', source:'EPF Scheme 2026 G.S.R. 525(E); SS Code 2020', month:'Aug 2026 Calendar', isNew:false},
+  {id:5,  area:'PF / ESI', reg:'ESI — Monthly Contribution (Aug 2026)', state:'Central', action:'Remit ESI contribution for July 2026 by August 15, 2026. Ensure wages basis uses Section 2(88) SS Code 2020 definition', owner:'Payroll / Finance', due:'2026-08-15', priority:'High', status:'Open', risk:'Penalty + interest @12% p.a. under SS Code', source:'SS Code 2020 Chapter III', month:'Aug 2026 Calendar', isNew:false},
+  {id:6,  area:'Professional Tax', reg:'Maharashtra PT Act 1975 — Monthly Remittance (Aug 2026)', state:'Maharashtra', action:'Remit Professional Tax and file return for July 2026 by August 15, 2026', owner:'Payroll', due:'2026-08-15', priority:'High', status:'Open', risk:'Late fee and interest on delayed PT remittance', source:'MH PT Act 1975', month:'Aug 2026 Calendar', isNew:false},
+  {id:7,  area:'Professional Tax', reg:'Maharashtra PT Act 1975 — Employer Enrolment Tax (Apr 25–Mar 26)', state:'Maharashtra', action:'Remit employer enrolment tax for Apr 2025–Mar 2026 (due Jun 30 — OVERDUE). Pay immediately with applicable penalty and interest', owner:'Payroll', due:'2026-06-30', priority:'High', status:'Open', risk:'Ongoing penalty accumulation on unpaid enrolment tax', source:'MH PT Act 1975', month:'Mar 2026 Calendar', isNew:false},
+  {id:8,  area:'PF / ESI', reg:'Aadhaar Authentication — ESI & PF (Section 142 SS Code 2020)', state:'Central', action:'Communicate Aadhaar seeding mandate to all employees; verify EPFO/ESIC records for 100% Aadhaar seeding; track and close gaps', owner:'HR Operations', due:'2026-06-09', priority:'High', status:'Open', risk:'Benefit denial to employees; EPFO/ESIC compliance breach', source:'MoLE F.No. S-38013, May 17 2026', month:'May 2026 (NL-106)', isNew:false},
+  {id:9,  area:'Social Security', reg:'ESI Wage Ceiling — Rs.15,000 (Chapter III SS Code 2020)', state:'Central', action:'Payroll audit — verify ESI applicability mapping against Rs.15,000 ceiling as defined under SS Code 2020', owner:'Payroll / HR', due:'2026-06-15', priority:'High', status:'Open', risk:'Wrong ESI deduction basis; excess recovery or underpayment exposure', source:'MoLE S.O. 2702(E), May 29 2026', month:'May 2026 (Jul-26 Monthly)', isNew:false},
+  {id:10, area:'IR Code', reg:'Worker Reskilling Fund — Section 83(1) IR Code 2020', state:'Central', action:'Assess contribution obligation under Section 83(1) of IR Code 2020; integrate in payroll once rules operationalized by Central Govt', owner:'HR / Finance', due:'2026-07-08', priority:'High', status:'Open', risk:'Non-contribution to statutory fund once operationalised', source:'MoLE S.O. 2316(E), May 8 2026', month:'May 2026 (NL-105)', isNew:false},
+  {id:11, area:'PF / ESI', reg:'ESIC Annual Health Check-up — Employees 40+', state:'Central', action:'Circulate ESIC Health Check-up Camp details (w.e.f. May 7 2026) to all insured employees aged 40+ in UP and Maharashtra; track participation', owner:'HR / Admin', due:'2026-06-30', priority:'High', status:'Open', risk:'Employee welfare non-compliance under Labour Codes', source:'ESIC Regional Office, May 12 2026 (NL-107)', month:'May 2026 (NL-107)', isNew:false},
+  {id:12, area:'Wages', reg:'NATS Stipend Revision — w.e.f. April 1 2026', state:'Central', action:'If NATS apprentices engaged: update stipend to revised rates effective Apr 1 2026; claim 50% reimbursement from Govt portal', owner:'HR / Finance', due:'2026-06-15', priority:'High', status:'Overdue', risk:'Underpayment of statutory apprentice stipend; BOAT audit exposure', source:'BOAT SR, May 13 2026 (NL-107)', month:'May 2026 (NL-107)', isNew:false},
+  {id:13, area:'Wages', reg:'UP — Bakrid Holiday Shift (May 27 → May 28 2026)', state:'Uttar Pradesh', action:'Verify UP attendance records for May 28 2026; rectify any wage deduction errors for that day', owner:'HR Ops / Payroll', due:'2026-06-09', priority:'High', status:'Overdue', risk:'Wrongful deduction / leave ledger error; employee grievance', source:'UP General Administration; MoP&amp;P DoPT, May 22 2026 (NL-107)', month:'May 2026 (NL-107)', isNew:false},
+  {id:14, area:'OSH', reg:'Maharashtra Draft OSH Rules 2026 — Review', state:'Maharashtra', action:'Review draft Maharashtra OSH Rules 2026 for IT office applicability; comment window may have closed Aug 1 — brief legal on final rules when notified', owner:'HR / Legal', due:'2026-08-01', priority:'Medium', status:'Open', risk:'Operational non-alignment once final rules are notified', source:'MH Labour Dept, May 5 2026 (NL-105)', month:'May 2026 (NL-105)', isNew:false},
+  {id:15, area:'Social Security', reg:'Maharashtra Draft Social Security Code Rules 2026 — Review', state:'Maharashtra', action:'Review draft MH Social Security Code Rules 2026; assess impact on PF/ESI/gratuity/maternity/bonus processes in Maharashtra operations', owner:'HR / Legal', due:'2026-08-01', priority:'Medium', status:'Open', risk:'Operational gaps once final MH SS Rules are enacted', source:'MH Labour Dept, May 5 2026 (NL-105)', month:'May 2026 (NL-105)', isNew:false},
+  {id:16, area:'OSH', reg:'OSH (Central) Rules 2026 — Office Establishment Provisions', state:'Central', action:'Extract office-establishment-specific provisions from Central OSH Rules 2026 and map to current workplace policies; identify and remediate gaps', owner:'HR / Legal', due:'2026-08-07', priority:'Medium', status:'Open', risk:'Non-alignment with new working conditions and welfare rules', source:'MoLE G.S.R. 345(E), May 8 2026 (NL-105)', month:'May 2026 (NL-105)', isNew:false},
+  {id:17, area:'Social Security', reg:'Social Security (Central) Rules 2026 — Full Review', state:'Central', action:'HR and legal to review SS Central Rules 2026 (G.S.R. 344(E)) in full for changes to PF, ESI, gratuity, maternity, and bonus administration processes', owner:'HR / Legal', due:'2026-08-07', priority:'Medium', status:'Open', risk:'Process gaps in PF/ESI/gratuity admin post-new rules', source:'MoLE G.S.R. 344(E), May 8 2026 (NL-105)', month:'May 2026 (NL-105)', isNew:false},
+  {id:18, area:'IR Code', reg:'RPD Act 2016 — Acid Attack Victim Definition Amendment', state:'Central', action:'Update HR disability policy and recruitment framework with revised acid attack victim definition; brief and train IC members on amendment', owner:'HR / D&I', due:'2026-09-01', priority:'Medium', status:'Open', risk:'Inclusion policy non-compliance; diversity framework gap', source:'MoSJE S.O. 2627(E), May 22 2026 (NL-107)', month:'May 2026 (NL-107)', isNew:false},
+  {id:19, area:'IR Code', reg:'IR Code Amendment Act 2026 — Repeal of Legacy Labour Laws', state:'Central', action:'Confirm repeal of Trade Unions Act 1926, Standing Orders Act 1946, and ID Act 1947 w.e.f. Nov 21 2025. Audit all policies, contracts, agreements, and internal templates referencing repealed Acts and update to IR Code 2020 framework', owner:'Legal / HR', due:'2026-07-08', priority:'Critical', status:'Open', risk:'Operating under repealed legal framework; void contractual clauses; enforcement exposure', source:'MoLJ Gazette, Feb 16 2026; MoLE S.O. 464(E) & 465(E), Feb 2 2026', month:'Mar 2026 Monthly', isNew:false},
+  {id:20, area:'IR Code', reg:'Four Labour Codes — MoLE Compliance Handbook for Employers', state:'Central', action:'Download and review MoLE Compliance Handbook for Employers (issued Feb 19 2026). Build internal compliance matrix mapping all four code obligations to BusinessNext processes, policies, and systems', owner:'HR / Legal / Compliance', due:'2026-06-30', priority:'High', status:'Open', risk:'Structural compliance gaps across all four Labour Code obligations', source:'MoLE Press Release, Feb 19 2026 (Mar 2026 Monthly)', month:'Mar 2026 Monthly', isNew:false},
+  {id:21, area:'PF / ESI', reg:'EPFO — PAN Linking to Establishment Profile', state:'Central', action:'Verify company PAN is correctly linked to establishment profile on EPFO portal. Use manual verification functionality for name-mismatch cases flagged by EPFO (NL-99 circular)', owner:'HR Compliance', due:'2026-06-30', priority:'High', status:'Open', risk:'EPFO portal access issues; delays in contribution processing', source:'EPFO Circular E-1226217, Mar 16 2026 (NL-99)', month:'Mar 2026 (NL-99)', isNew:false},
+  {id:22, area:'Wages', reg:'Maharashtra VDA Revision — Jan to Jun 2026', state:'Maharashtra', action:'Audit all Maharashtra employees and contract workers against revised VDA rates effective Jan 1 to Jun 30 2026. Verify minimum wage compliance. Update payroll for Jul 2026 VDA revision.', owner:'Payroll / HR', due:'2026-06-20', priority:'High', status:'Open', risk:'Underpayment of statutory minimum wages; labour authority enforcement', source:'MH Govt Notification, Feb 4 2026 (Mar 2026 Monthly)', month:'Mar 2026 Monthly', isNew:false},
+  {id:23, area:'IR Code', reg:'UP Shops & Establishments — Amendment Bill 2025', state:'Uttar Pradesh', action:'Review UP Dookan Aur Vanijya Adhishthan (Sanshodhan) Vidheyak 2025. Assess impact on UP office registration, working hours, leave entitlements, and establishment compliance obligations. Update HR/admin SOPs.', owner:'HR / Legal', due:'2026-07-31', priority:'Medium', status:'Open', risk:'Non-compliance with revised S&E obligations in UP offices once Bill is enacted', source:'UP Labour Dept No. 289/XC-S-1-25-36S-2025, Dec 30 2025 (Mar 2026 Monthly)', month:'Mar 2026 Monthly', isNew:false},
+  {id:24, area:'Wages', reg:'UP Draft Labour Code Rules — Wages, IR & Social Security', state:'Uttar Pradesh', action:'Monitor finalization of UP-specific Wage Code Rules, IR Rules, and SS Code Rules (published for comment Mar 10 2026). Once finalized, gap-analyze and update payroll, leave, and IR processes for UP', owner:'HR / Legal', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Operational gaps when UP state rules are finalized and become enforceable', source:'UP Labour Dept Notifications, Mar 10 2026 (NL-98/99)', month:'Mar 2026 (NL-98/99)', isNew:false},
+  {id:25, area:'PF / ESI', reg:'Budget 2026-27 — Income Tax / EPF Framework Alignment', state:'Central', action:'Review Budget 2026-27 alignment of income-tax provisions with EPF Scheme 2026. Verify employer contribution limits, employee thresholds, and investment pattern compliance in payroll system', owner:'Finance / HR', due:'2026-07-31', priority:'Medium', status:'Open', risk:'Incorrect tax treatment of PF contributions; income tax and EPFO audit exposure', source:'MoLE Press Release, Feb 3 2026 (Mar 2026 Monthly)', month:'Mar 2026 Monthly', isNew:false},
+  {id:26, area:'PF / ESI', reg:'ESIC Health Connect App — Employee Communication', state:'Central', action:'Circulate information on revamped ESIC Health Connect app to all insured employees in UP and Maharashtra. App supports Aadhaar seeding, appointment booking, and e-health records. Track acknowledgement.', owner:'HR Communications', due:'2026-06-20', priority:'Low', status:'Open', risk:'Employees unaware of benefit access tool; weakens Aadhaar seeding compliance indirectly', source:'ESIC e-file, Feb 2 2026 (Mar 2026 Monthly)', month:'Mar 2026 Monthly', isNew:false},
+  {id:27, area:'Social Security', reg:'ESI (General) Regulations 2026 — 45-Day Comment Window (Closes Sep 5)', state:'Central', action:'Review draft ESI (General) Regulations 2026 (notified Jul 22 2026; supersedes 1950 Regulations) with old-vs-new comparison published by ESIC. Identify operational changes. Submit comments if provisions adversely impact BusinessNext. Comment window closes Sep 5, 2026.', owner:'Legal / HR Compliance', due:'2026-09-05', priority:'High', status:'Open', risk:'Missed comment window; unfavorable ESI provisions finalized without employer input', source:'ESIC No. X-1101/31/2026, Jul 22 2026 (NL-110; Aug-26 Monthly)', month:'Jun 2026 (NL-110); Updated Aug 2026 Monthly', isNew:false},
+  {id:28, area:'Social Security', reg:'Maharashtra Draft Employees Compensation Rules 2026', state:'Maharashtra', action:'Review draft MH Employees Compensation Rules 2026 (supersedes MH Workmen Compensation Rules 1924 under SS Code 2020). Assess impact on accident reporting, compensation calculation, and claims process in MH offices.', owner:'HR / Legal', due:'2026-07-16', priority:'Medium', status:'Open', risk:'Operational gaps in accident compensation process; non-compliance once rules are finalized', source:'MH Industries Dept, No. Misc-1026/C.R.03/LABOUR-7a, Jun 16 2026 (NL-110)', month:'Jun 2026 (NL-110)', isNew:false},
+  {id:29, area:'OSH', reg:'Creche Facility — Central OSH Rules 2026 (50+ Workers)', state:'Central', action:'Verify existence of creche facility within 1 km or creche allowance arrangement (Rs. 500/month per eligible employee). BusinessNext at 1,500 employees far exceeds 50-worker threshold. Document compliance.', owner:'HR / Admin', due:'2026-08-08', priority:'High', status:'Open', risk:'Statutory violation under OSH Code — inspection-triggering; employee welfare liability', source:'MoLE G.S.R. 345(E), May 8 2026 (NL-105)', month:'May 2026 (NL-105)', isNew:true},
+  {id:30, area:'IR Code', reg:'Works Committee & Grievance Redressal Committee — Constitution', state:'Central', action:'BusinessNext (1,500 employees) must constitute Works Committees (mandatory at 300+ workers) and GRC under IR Code Central Rules 2026. Verify constitution and functional status. Ensure Model Standing Orders available in Hindi, English, and local language.', owner:'HR / Legal', due:'2026-08-08', priority:'High', status:'Open', risk:'Statutory non-compliance — absence of mandatory statutory bodies is an independent violation', source:'MoLE Central Rules 2026 — IR Code Central Rules (NL-105)', month:'May 2026 (NL-105)', isNew:true},
+  {id:31, area:'Contract Labour', reg:'Principal Employer Liability — Contractor Bonus & Annual Increment', state:'Central', action:'Audit all active contractor agreements at BusinessNext. Verify bonus payment compliance by contractors (8.33% minimum mandatory under Central Rules 2026). Verify 2% annual increment for contract workers. Update standard principal employer agreement templates.', owner:'HR / Procurement', due:'2026-07-08', priority:'High', status:'Open', risk:'Principal employer directly liable for contractor bonus default; unaudited contractor relationships create financial enforcement exposure', source:'MoLE G.S.R. 345(E) — OSH Central Rules 2026 (NL-105)', month:'May 2026 (NL-105)', isNew:true},
+  {id:32, area:'PF / ESI', reg:'EPFO — UAN Generation for New Joiners Exclusively via UMANG App (FAT)', state:'Central', action:'Verify new-joiner onboarding SOP mandates UAN allotment through Aadhaar Face Authentication Technology (FAT) on UMANG App (effective Aug 1 2025). Train HR Ops/Payroll. Update ECR and EPFO records with UAN before remitting contributions for the joining wage month.', owner:'HR Operations / Payroll', due:'2026-07-22', priority:'High', status:'Open', risk:'Delayed or rejected EPF remittance for new joiners without valid UAN; retrospective interest exposure', source:'EPFO Circular WSU/MemberProfilePt.1, Jun 30 2025; Process Note Jul 8 2026', month:'Jul 2026 (EPFO UMANG Doc)', isNew:true},
+  {id:33, area:'PF / ESI', reg:'EPFO — EPF Interest Rate for FY 2025-26 (8.25%)', state:'Central', action:'Note 8.25% interest rate declared for FY 2025-26 for employee PF statement communication and annual account reconciliation. No payroll process change required.', owner:'HR / Finance', due:'2026-07-31', priority:'Low', status:'Open', risk:'None — informational. For member communication and reconciliation only.', source:'EPFO No. INV-11/2/2021-INV/E-41960/2519, Jul 1 2026 (NL-112)', month:'Jun 2026 (NL-112)', isNew:true},
+  {id:34, area:'Wages', reg:'Consumer Price Index for Industrial Workers — May 2026', state:'Central', action:'Monitor CPI-IW (base 2016=100) for May 2026 as input to future VDA/minimum wage revisions. No immediate payroll action required.', owner:'HR / Payroll', due:'2026-07-31', priority:'Low', status:'Open', risk:'None directly — input for future VDA revision planning', source:'MoLE No. 5/1/2021-CPI, Jun 30 2026 (NL-112)', month:'Jun 2026 (NL-112)', isNew:true},
+  {id:35, area:'PF / ESI', reg:'Employees Provident Funds Scheme 2026 — Supersedes EPF Scheme 1952', state:'Central', action:'Review EPF Scheme 2026 in full — contribution mechanics, member account administration, withdrawal/advance rules, nomination provisions — against current PF administration and payroll configuration. Remediate any process still anchored to superseded 1952 Scheme.', owner:'Payroll / Finance / HR', due:'2026-07-15', priority:'Critical', status:'Open', risk:'Administering PF under superseded EPF Scheme 1952 is a statutory violation; EPFO audit and employee grievance exposure', source:'MoLE G.S.R. 525(E), Jun 29 2026 (Jul-26 Monthly)', month:'Jul 2026 Monthly', isNew:true},
+  {id:36, area:'PF / ESI', reg:'Employees Pension Scheme 2026 — Supersedes EPS 1995', state:'Central', action:'Review EPS 2026 for changes to pension contribution computation, eligible service calculation, and pension fund administration. Update payroll and HR benefit communications still referencing EPS 1995 or Family Pension Scheme 1971.', owner:'HR / Finance', due:'2026-07-15', priority:'Critical', status:'Open', risk:'Continuing to administer or communicate pension under superseded EPS 1995 is statutory non-compliance', source:'MoLE G.S.R. 527(E), Jun 29 2026 (Jul-26 Monthly)', month:'Jul 2026 Monthly', isNew:true},
+  {id:37, area:'PF / ESI', reg:'Employees Deposit Linked Insurance Scheme 2026 — Supersedes EDLI 1976', state:'Central', action:'Review EDLI Scheme 2026 (employer contribution: 0.5% of wages) for changes to insurance benefit computation and administration. Update payroll/benefits documentation still referencing superseded EDLI 1976.', owner:'HR / Finance', due:'2026-07-15', priority:'Critical', status:'Open', risk:'Administering EDLI under superseded 1976 Scheme risks incorrect death-benefit computation and statutory non-compliance', source:'MoLE G.S.R. 526(E), Jun 29 2026 (Jul-26 Monthly)', month:'Jul 2026 Monthly', isNew:true},
+  {id:38, area:'Child Labour', reg:'Maharashtra Child Labour (Prohibition & Regulation) (Amendment) Rules 2025', state:'Maharashtra', action:'Review amended Maharashtra Child Labour Rules for any new age-verification, record-keeping, or notice-display requirements applicable to MH offices. Update HR onboarding age-verification checks and statutory registers.', owner:'HR Compliance', due:'2026-09-06', priority:'Medium', status:'Open', risk:'Non-alignment with amended state child labour rules; low direct risk given adult-only IT workforce', source:'MH Industries Dept No. BLA 2018/CR 499/Labour-4, Jun 23 2026 (Jul-26 Monthly)', month:'Jul 2026 Monthly', isNew:true},
+  {id:39, area:'Social Security', reg:'SS Code 2020 — Section 127: 12% p.a. Interest on Delayed Dues', state:'Central', action:'Note formal fixing of 12% p.a. simple interest on any delayed SS Code dues (retroactive to Nov 21 2025) for all Chapter III obligations including PF and ESI. Confirm payroll interest logic and legal citations reflect this statutory rate.', owner:'Finance / Legal', due:'2026-07-31', priority:'Low', status:'Open', risk:'None directly if already applying 12% p.a.; authoritative legal citation for any disputes', source:'MoLE S.O. 2699(E), May 29 2026 (Jul-26 Monthly)', month:'Jul 2026 Monthly', isNew:true},
+  // ── NEW v3.0 ITEMS ──
+  {id:40, area:'Employment Law', reg:'Appointment Letters — Mandatory for All Employees (Central Rules 2026)', state:'Central', action:'Issue formal appointment letters to all employees as mandated under Labour Code Central Rules 2026 (effective from Nov 21 2025 Code commencement). Verify all 1,500 employees have compliant letters. Update onboarding SOP immediately.', owner:'HR Operations', due:'2026-08-06', priority:'Critical', status:'Open', risk:'Non-issuance of appointment letter is an OSH Code / IR Code inspection-triggering statutory violation; per-employee penalty exposure', source:'Labour Code (Central) Rules, May 8 2026 (Labour Code Central Rules Doc)', month:'May 2026 (Labour Code Central Rules)', isNew:true},
+  {id:41, area:'Registration', reg:'Shram Suvidha Portal Registration Audit', state:'Central', action:'Audit all existing establishment registrations, licences, and filings under legacy Acts (Shops & Establishments, Contract Labour, etc.) and map to new Labour Code framework on Shram Suvidha Portal. Transition registrations as required under new Code framework.', owner:'HR Compliance / Admin', due:'2026-09-30', priority:'High', status:'Open', risk:'Establishments on legacy Act registrations may not be recognized under new Labour Code framework; inspection and enforcement risk', source:'Labour Code (Central) Rules, May 8 2026 (Labour Code Central Rules Doc)', month:'May 2026 (Labour Code Central Rules)', isNew:true},
+  {id:42, area:'PF / ESI', reg:'ESI Wages Definition — Section 2(88) SS Code 2020 Alignment', state:'Central', action:'Audit ESI contribution calculation methodology. Contributions must be computed on "wages" as defined under Section 2(88) of SS Code 2020 — not the old ESI Act 1948 definition. Update payroll configuration and instruct payroll vendor to align computation basis.', owner:'Payroll / HR / Legal', due:'2026-08-15', priority:'High', status:'Open', risk:'Incorrect ESI deduction basis leads to underpayment recovery + 12% p.a. interest, or overpayment exposure', source:'ESIC Regional Director Clarification, Jun 4 2026 (NL-110; Jul-26 Monthly)', month:'Jun 2026 (NL-110)', isNew:true},
+  {id:43, area:'OSH', reg:'Canteen Facility — Mandatory for 100+ Workers (OSH Code Central Rules)', state:'Central', action:'Verify existence of a canteen facility for BusinessNext employees (1,500 employees — far exceeds 100-worker threshold). If no canteen is in place, establish arrangement or equivalent as required under OSH Code Central Rules 2026. Document and maintain compliance records.', owner:'Admin / HR', due:'2026-09-30', priority:'High', status:'Open', risk:'Statutory violation under OSH Code — canteen is a non-negotiable mandatory obligation at this headcount; inspection-triggering', source:'Labour Code (Central) OSH Rules, May 8 2026 (Labour Code Central Rules Doc)', month:'May 2026 (Labour Code Central Rules)', isNew:true},
+  {id:44, area:'IR Code', reg:'Standing Orders — Multilingual Availability (Hindi / English / Local Language)', state:'Central', action:'Ensure certified or Model Standing Orders are made available to all workers in Hindi, English, and the local language (Marathi for Maharashtra; Hindi is standard for UP). Display at prominent locations in each BusinessNext office as required under IR Code Central Rules 2026.', owner:'HR / Legal / Admin', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Non-compliance with mandatory display and language-availability requirement under IR Code 2020 Central Rules', source:'IR Code (Central) Rules 2026; Model Standing Orders S.O. 2312(E)', month:'May 2026 (Labour Code Central Rules)', isNew:true},
+  {id:45, area:'Employment Law', reg:'Nomination Records Update — Non-Family Nominations Invalid', state:'Central', action:'Audit all PF and gratuity nomination records. Under Labour Code Central Rules 2026, any nomination in favour of a non-family member becomes void where the employee has a family. Update nomination records for all such employees; obtain and file fresh nominations.', owner:'HR Operations', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Invalid nominations create benefit payment disputes on employee death or exit; potential employee/family grievance', source:'Labour Code (Central) Rules, May 8 2026 (Labour Code Central Rules Doc)', month:'May 2026 (Labour Code Central Rules)', isNew:true},
+  {id:46, area:'PF / ESI', reg:'VISHWAS 2026 — EPFO One-Time PF Damages Settlement', state:'Central', action:'Assess whether BusinessNext has pending EPFO damage orders (Section 14B EPF Act / Section 128 SS Code 2020). If yes, evaluate settlement at reduced graded rates under VISHWAS 2026. Finance and Legal to initiate damage order audit within 2 weeks. Settlement window closes Dec 29, 2026.', owner:'Finance / Legal', due:'2026-12-29', priority:'Medium', status:'Open', risk:'Missed settlement window means full statutory damages liability; financial exposure', source:'EPFO No. Compliance/E-1203096/2025/2823, Jul 9 2026 (NL-113; Aug-26 Monthly)', month:'Jul 2026 (NL-113); Aug 2026 Monthly', isNew:true},
+  {id:47, area:'PF / ESI', reg:'EPFO PF Trust Amnesty Scheme 2026', state:'Central', action:'Verify whether BusinessNext operates any PF Trust under Income Tax Act 1961 recognition without formal EPFO exemption notification. If yes, apply under EPFO PF Trust Amnesty Scheme 2026 to regularise status. Window closes Dec 29, 2026.', owner:'Finance / Legal', due:'2026-12-29', priority:'Medium', status:'Open', risk:'Informal PF Trust without formal EPFO exemption creates enforcement exposure under EPF Scheme 2026 post-amnesty period', source:'MoLE Press Release, Jul 12 2026 (NL-114; Aug-26 Monthly)', month:'Jul 2026 (NL-114); Aug 2026 Monthly', isNew:true},
+  {id:48, area:'PF / ESI', reg:'Employees Enrolment Campaign 2026 — UAN Gap Closure', state:'Central', action:'Audit UAN enrolment status for all 1,500 employees. Set up internal EPFO helpdesk per mandate (Jul 8 2026). Close UAN gaps — especially employees who joined since Aug 1 2025 (UMANG FAT mandatory). File declarations for any unenrolled employees under Enrolment Campaign 2026. UPDATED: Campaign extended to Oct 31, 2026 (covers employees outside EPF coverage Apr 1 2009 to Mar 31 2026).', owner:'HR Operations', due:'2026-10-31', priority:'High', status:'Open', risk:'Unenrolled employees found during EPFO inspection creates employer liability; enforcement is active', source:'MoLE Jul 8 2026; EEC 2026 extension Press Release Aug 22 2026 (NL-118)', month:'Jul 2026 (NL-113); Aug 2026 (NL-118)', isNew:true},
+  {id:49, area:'Gig Workers', reg:'Maharashtra Gig and Platform Workers Rights and Protection Bill 2026', state:'Maharashtra', action:'Review Bill (notified Jul 3 2026). As an AI-first IT company, assess whether BusinessNext engages gig, freelance, or platform workers for any function. If yes, prepare for registration, fair wage, and social security obligations under the Bill once enacted. Monitor legislative progress.', owner:'Legal / HR / AI Strategy', due:'2026-12-31', priority:'Low', status:'Open', risk:'Regulatory non-compliance if Bill is enacted and BusinessNext engages gig workers without mapping obligations — especially relevant for AI-first platform strategy', source:'MH Govt Notification, Jul 3 2026 (NL-113; Aug-26 Monthly)', month:'Jul 2026 (NL-113); Aug 2026 Monthly', isNew:true},
+  {id:50, area:'Gig Workers', reg:'E-Shram Registration — Gig / Platform / Unorganised Workers', state:'Central', action:'If BusinessNext engages gig, platform, or unorganised workers in any capacity, facilitate their E-Shram portal registration. EPFO aggregator module is live and onboarding is mandated. Self-assess whether any engagement model triggers E-Shram obligations for BusinessNext.', owner:'HR / Legal / AI Strategy', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Non-registration of engaged gig workers on E-Shram creates social security compliance gap and potential EPFO enforcement', source:'MoLE Press Release, Jul 20 2026 (NL-115; Aug-26 Monthly)', month:'Jul 2026 (NL-115); Aug 2026 Monthly', isNew:true},
+  {id:51, area:'Contract Labour', reg:'Contract Labour — Single Multi-State Licence Under OSH Code', state:'Central', action:'Evaluate utilisation of single multi-state principal employer licence for contract labour now available under OSH Code Central Rules 2026. Current multi-state setup (UP + Maharashtra) may be consolidated under a single licence, reducing administrative overhead and renewal risk.', owner:'HR / Procurement / Legal', due:'2026-12-31', priority:'Low', status:'Open', risk:'Not a risk — a process efficiency and compliance simplification opportunity', source:'Labour Code (Central) OSH Rules, May 8 2026 (Labour Code Central Rules Doc)', month:'May 2026 (Labour Code Central Rules)', isNew:true},
+  // ── NEW v3.1 ITEMS — NL-116 (Aug 3–9, 2026) ──
+  {id:52, area:'Wages', reg:'Maharashtra VDA Revised Rates — Jul 1 to Dec 31, 2026', state:'Maharashtra', action:'Update all Maharashtra employee and contract worker wage computations against revised VDA rates effective July 1, 2026 (MH Labour Dept, Aug 5 2026). Ensure July 2026 payroll already processed reflects revised rates; if not, compute and pay differential in August payroll. Update payroll system and contract worker rate schedules.', owner:'Payroll / HR', due:'2026-08-31', priority:'High', status:'Open', risk:'Underpayment of statutory minimum wages for Jul–Dec 2026 period; enforcement and differential wage liability', source:'MH Labour Dept, Aug 5 2026 (NL-116)', month:'Aug 2026 (NL-116)', isNew:true},
+  {id:53, area:'PF / ESI', reg:'EPF / EPS / EDLI Scheme 2026 — Corrigenda (Aug 4, 2026)', state:'Central', action:'Review corrigenda to EPF Scheme 2026 (G.S.R. 703(E)), EPS 2026 (G.S.R. 704(E)), and EDLI Scheme 2026 (G.S.R. 705(E)), all dated Aug 4, 2026. Identify any substantive changes from original Jun 29 2026 schemes and update payroll, HR processes, and benefit communications accordingly. Do not treat as purely typographic until reviewed.', owner:'Payroll / HR / Legal', due:'2026-08-31', priority:'Medium', status:'Open', risk:'Unreviewed substantive corrections to core PF scheme framework; operational misalignment if material changes are missed', source:'MoLE G.S.R. 703/704/705(E), Aug 4 2026 (NL-116)', month:'Aug 2026 (NL-116)', isNew:true},
+  {id:54, area:'PF / ESI', reg:'ESIC Maharashtra — SS Code 2020 Coverage Clarification (All Establishments)', state:'Maharashtra', action:'Note ESIC RO Mumbai clarification (Jul 27, 2026): SS Code 2020 ESI provisions apply to ALL establishments in Maharashtra — including educational institutions, medical institutions, and all establishments under Section 1(4) — from Nov 21, 2025. Confirm all BusinessNext Maharashtra establishments have been contributing from Nov 21, 2025. If any subsidiary or associate establishment was excluded in error, rectify immediately.', owner:'HR Compliance / Finance', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Retrospective ESI contribution liability from Nov 21, 2025 for any establishment that was incorrectly treated as outside SS Code coverage', source:'ESIC RO Mumbai No. 31/NSI/Edu-Med/2023/Coord., Jul 27 2026 (NL-116)', month:'Aug 2026 (NL-116)', isNew:true},
+  // ── NEW v3.2 ITEM — ATT00001 Infographic (Aug 9, 2026) ──
+  {id:55, area:'PF / ESI', reg:'EPFO — New PF Advance / Partial Withdrawal Rules (EPF Scheme 2026)', state:'Central', action:'Communicate new 3-category PF withdrawal framework to all 1,500 employees: (1) Essential Needs — illness, education, marriage; (2) Housing Needs — purchase, construction, renovation; (3) Special Circumstances — government-notified events. Key changes: eligible balance = 75% of total PF balance; all partial withdrawals now 100% auto-settled; unemployment withdrawal period extended to 12 months (EPF) and 36 months (EPS). Update HR PF advance SOP and FAQ. Issue employee communication.', owner:'HR Operations / Payroll', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Employees filing advances under old 13-category framework; incorrect processing of auto-settled claims; employee dissatisfaction due to lack of communication', source:'Core Integra Infographic, Aug 9 2026 (ATT00001)', month:'Aug 2026 (ATT00001)', isNew:true},
+  // ── NEW v3.5 ITEMS — NL-118 + Labour Code FAQs + Infographic (Aug 18-24, 2026) ──
+  {id:63, area:'Wages', reg:'UP Engineering Industry — VDA Revised Aug 1, 2026 to Jan 31, 2027', state:'Uttar Pradesh', action:'Review revised VDA and minimum wage for engineering industry in UP (effective Aug 1, 2026 to Jan 31, 2027, based on CPI index 431.424). Assess whether BusinessNext UP operations fall under "engineering industry" classification (IT product companies may be classified here). Update UP payroll if applicable. Verify contract worker wages.', owner:'Payroll / HR / Legal', due:'2026-09-15', priority:'High', status:'Open', risk:'Underpayment of revised statutory minimum wages for UP operations; labour authority enforcement exposure', source:'UP Labour Dept No. 1305-08/IRD-2025, Aug 18 2026 (NL-118)', month:'Aug 2026 (NL-118)', isNew:true},
+  {id:64, area:'Wages', reg:'50% Allowance Cap — Wage Structure Audit for All Statutory Calculations', state:'Central', action:'Audit BusinessNext wage structure immediately: under Labour Codes, if total allowances (excluding gratuity and retrenchment compensation) exceed 50% of total remuneration, the excess must be added back to wages. This revised "wages" figure applies to PF, ESI, gratuity, and bonus calculations from Nov 21, 2025. Map each salary component against the defined list of allowances. Recalculate statutory contributions where required. Update payroll configuration.', owner:'Payroll / Finance / HR', due:'2026-09-30', priority:'Critical', status:'Open', risk:'Incorrect wage base for PF, ESI, gratuity, and bonus since Nov 21, 2025 — retrospective liability exposure on all statutory contributions', source:'Labour Code FAQs MoLE; Presentation — Labour Codes Ready for Implementation, Aug 18 2026', month:'Aug 2026 (Labour Code FAQs)', isNew:true},
+  {id:65, area:'Social Security', reg:'Gratuity — Recalculate on New Wage Definition from Nov 21, 2025', state:'Central', action:'For all employees separated on or after Nov 21, 2025, recalculate gratuity using new wage definition under SS Code 2020: wage for gratuity = Basic + DA OR 50% of total remuneration, whichever is higher. Update gratuity liability in books of accounts. Review any gratuity paid since Nov 21, 2025 for potential shortfall. For fixed-term employees: gratuity is now payable on completion of 1 year (not 5 years).', owner:'Finance / HR / Payroll', due:'2026-09-30', priority:'High', status:'Open', risk:'Underpayment of gratuity using old wage definition is a statutory default; financial liability for differential payouts', source:'Labour Code FAQs MoLE; SS Code 2020 Section; Presentation Aug 18 2026', month:'Aug 2026 (Labour Code FAQs)', isNew:true},
+  {id:66, area:'OSH', reg:'Earned Leave Eligibility — Reduced to 180 Days Under OSH Code', state:'Central', action:'Update leave policy: under OSH Code 2020, annual earned leave eligibility threshold is reduced from 240 days to 180 days worked in a calendar year. Review and update leave policy, employee handbook, HRMS configuration, and any employment contracts specifying the old 240-day threshold. Communicate change to all employees.', owner:'HR / HR Ops', due:'2026-09-30', priority:'High', status:'Open', risk:'Leave policy non-compliance; potential employee grievance if earned leave is denied to employees who worked 180-239 days', source:'OSH Code 2020; FAQs on Labour Codes, Aug 18 2026', month:'Aug 2026 (Labour Code FAQs)', isNew:true},
+  {id:67, area:'OSH', reg:'Supervisor Classification — Rs.18,000 Worker Threshold (OSH Code)', state:'Central', action:'Audit workforce to identify supervisors earning above Rs.18,000/month — they are NOT classified as "workers" under OSH Code 2020. Reclassify accordingly in HRMS and compliance registers. Ensure welfare, health, and safety provisions are mapped correctly to "worker" vs. non-worker categories. Update job descriptions and classification registers.', owner:'HR / Legal', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Incorrect worker/non-worker classification affects OSH compliance obligations and welfare entitlements; audit exposure', source:'OSH Code 2020 Section; FAQs on Labour Codes, Aug 18 2026', month:'Aug 2026 (Labour Code FAQs)', isNew:true},
+  {id:68, area:'OSH', reg:'Women Night Shift — Consent and Safety Arrangements Policy', state:'Central', action:'Update HR policy to enable women employees to work night shifts with mandatory written consent. Employer must provide adequate safety, transport, and security arrangements as required under OSH Code 2020. Document consent mechanism, define safety standards for night shift (lighting, security personnel, transportation), and ensure zero coercion in consent process.', owner:'HR / Admin / Security', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Non-compliance with OSH Code requirements for women night shift exposes company to inspection finding and employee safety liability', source:'OSH Code 2020; FAQs on Labour Codes, Aug 18 2026', month:'Aug 2026 (Labour Code FAQs)', isNew:true},
+  {id:69, area:'Contract Labour', reg:'Service Certificate — Mandatory for Contract Workers on Separation', state:'Central', action:'Instruct all contractors engaged by BusinessNext to issue a service certificate to every contract worker on separation. Update standard principal employer agreements to include a clause requiring contractors to comply with this obligation. Verify contractors are maintaining service certificate records and issuing on exit.', owner:'HR / Procurement', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Non-issuance of service certificate is a statutory violation under OSH Code; principal employer liable if contractor fails to comply', source:'OSH Code 2020; FAQs on Labour Codes, Aug 18 2026', month:'Aug 2026 (Labour Code FAQs)', isNew:true},
+  {id:70, area:'OSH', reg:'Transgender Employees — Separate Workplace Facilities', state:'Central', action:'Provide separate and adequate bathing facilities, toilets, and restrooms for transgender employees at all BusinessNext offices as mandated under OSH Code 2020. Audit current facility arrangements. Update facility allocation plan and signage. Ensure equal access to all workplace amenities. Document compliance.', owner:'Admin / HR / D&I', due:'2026-12-31', priority:'Medium', status:'Open', risk:'Non-provision of separate facilities is a statutory violation under OSH Code; reputational and legal exposure', source:'OSH Code 2020; FAQs on Labour Codes, Aug 18 2026', month:'Aug 2026 (Labour Code FAQs)', isNew:true},
+  {id:71, area:'Wages', reg:'Bonus Eligibility and Calculation Ceiling — FORMALLY GAZETTED (Retrospective Nov 21, 2025)', state:'Central', action:'URGENT — Both bonus thresholds are now formally gazetted under Code on Wages 2019, effective retrospectively from Nov 21, 2025: (1) Eligibility ceiling: every employee drawing wages up to Rs.21,000/month is eligible for bonus [S.O. 4711(E), 25.08.2026]; (2) Calculation ceiling: bonus to be calculated on Rs.7,000/month or central minimum wage, whichever is higher [S.O. 4710(E), 25.08.2026]. Immediate action: (a) Identify all employees with wages up to Rs.21,000 — verify they were included in FY 2025-26 bonus calculations; (b) Recalculate bonus using Rs.7,000 or applicable minimum wage cap for eligible employees; (c) If FY 2025-26 bonus was already disbursed using different thresholds, compute differential liability; (d) Update payroll configuration for FY 2026-27 bonus processing. This is no longer advisory — it is a statutory gazette notification.', owner:'Payroll / Finance / HR', due:'2026-09-30', priority:'High', status:'Open', risk:'Retrospective gazette notification creates confirmed liability for any bonus underpayment since Nov 21, 2025 under Code on Wages. Non-compliance now carries enforcement risk beyond advisory guidance.', source:'S.O. 4711(E) and S.O. 4710(E) dated 25.08.2026 — MoLE; NL-119 (24-30 Aug 2026); Labour Code FAQs MoLE', month:'Aug 2026 (NL-119)', isNew:true},
+  // ── NEW v3.7 ITEMS — September 2026 Monthly Newsletter ──
+  {id:72, area:'PF / ESI', reg:'ESIC — New Insured Person (IP) Registration Functionality in ERP', state:'Central', action:'Migrate to the new ESIC IP Registration ERP module (F. No. P-14011/2/2026-BFT-II, 04.08.2026). Immediate actions: (1) Train Payroll / HR Ops team on the new IP Registration module workflow — the old registration process is superseded; (2) Ensure all new joiners from the effective date are registered through the new ERP module; (3) Instruct employees to complete self-authentication via the ESIC Health Connect App to receive Insurance Number; (4) Download and circulate the User Manual issued by ESIC for step-by-step guidance; (5) Update HR onboarding SOP to reflect new ESIC registration process.', owner:'Payroll / HR Operations', due:'2026-10-15', priority:'High', status:'Open', risk:'Non-compliance with new registration process may delay Insurance Number generation for new joiners; audit exposure if old process is continued post-transition', source:'Core Integra Monthly Newsletter Sep 2026 (ESIC F. No. P-14011/2/2026-BFT-II, 04.08.2026)', month:'Sep 2026 (Monthly NL)', isNew:true},
+  {id:73, area:'PF / ESI', reg:'ESIC Coverage Clarification — All Establishments in Maharashtra w.e.f. Nov 21, 2025', state:'Maharashtra', action:'ESIC Regional Office Mumbai (No. 31/NSI/Edu-Med Institute/2023/Coord., 27.07.2026) has formally clarified that Code on Social Security 2020 applies to ALL establishments in Maharashtra including educational institutions, medical institutions, and all other establishments under section 1(4) read with First Schedule, w.e.f. 21.11.2025. ESI contribution liability confirmed from that date. Actions: (1) Audit all BusinessNext Maharashtra establishments to confirm ESI registration status; (2) Verify all eligible employees (wages up to ESI threshold) are enrolled and contributions are being remitted; (3) Check whether any employees or locations were previously considered out of ESI scope — bring into compliance immediately; (4) Compute any contribution shortfall since Nov 21, 2025 and regularise; (5) Confirm coverage with your ESI consultant for any grey areas.', owner:'Payroll / Legal / Finance', due:'2026-09-30', priority:'High', status:'Open', risk:'Establishments in Maharashtra that have not extended ESI coverage to all eligible employees since Nov 21, 2025 are exposed to contribution shortfall, interest, and damages liability', source:'Core Integra Monthly Newsletter Sep 2026 (ESIC RO Mumbai No. 31/NSI/Edu-Med Institute/2023/Coord., 27.07.2026)', month:'Sep 2026 (Monthly NL)', isNew:true},
+  // ── NEW v3.3 ITEMS — NCW POSH Advisory (Jun 19, 2026) — 7 separate line items ──
+  {id:56, area:'POSH', reg:'NCW Advisory — Mandatory Annual POSH Audit', state:'Central', action:'Conduct mandatory annual POSH audit for all BusinessNext establishments (10+ employees). Audit scope: IC constitution status, complaint register, inquiry timelines, confidentiality safeguards, awareness initiatives, SHe-Box registration, and annual report submission. Submit audit report to District Authority. NCW has advised DMs and SSPs to track non-compliance.', owner:'HR / Legal', due:'2026-09-30', priority:'High', status:'Open', risk:'Non-conduct of annual POSH audit is treated as non-compliance per NCW advisory. District Authority enforcement is active.', source:'NCW Advisory, Jun 19 2026 (NCW_Press_Release.pdf)', month:'Aug 2026 (NCW Press Release)', isNew:true},
+  {id:57, area:'POSH', reg:'NCW Advisory — IC Constitution in Every Office, Branch and Unit', state:'Central', action:'Verify and document that an Internal Committee (IC) is constituted in EVERY BusinessNext office, branch, and unit across UP and Maharashtra — not only head office. Any location without an IC is an independent statutory violation. Set up ICs for all locations immediately.', owner:'HR / Legal', due:'2026-09-30', priority:'High', status:'Open', risk:'Each office/branch without an IC is a separate POSH Act violation; Board-level liability if an incident occurs at an unprotected location.', source:'NCW Advisory, Jun 19 2026 (NCW_Press_Release.pdf)', month:'Aug 2026 (NCW Press Release)', isNew:true},
+  {id:58, area:'POSH', reg:'NCW Advisory — IC Composition Compliance Verification', state:'Central', action:'Verify IC composition at every BusinessNext office and unit strictly as per POSH Act: (a) woman Presiding Officer, (b) at least one external expert with POSH experience, (c) minimum 50% women members. Reconstitute any non-compliant IC immediately and document changes.', owner:'HR / Legal', due:'2026-09-30', priority:'High', status:'Open', risk:'Non-compliant IC composition invalidates the IC and all inquiries conducted by it — creating retrospective liability exposure.', source:'NCW Advisory, Jun 19 2026 (NCW_Press_Release.pdf)', month:'Aug 2026 (NCW Press Release)', isNew:true},
+  {id:59, area:'POSH', reg:'NCW Advisory — Annual POSH Report Submission (Section 21)', state:'Central', action:'Submit annual POSH report under Section 21 of POSH Act 2013 for all BusinessNext establishments. Report covers: number of complaints received, disposed, pending, and workshop/awareness activities. NCW advisory reinforces this as a mandatory, independently enforceable obligation. Due: Jan 31, 2027 (for calendar year 2026).', owner:'HR Compliance', due:'2027-01-31', priority:'Medium', status:'Open', risk:'Non-submission of annual POSH report is a statutory default under Section 21 — attracts penalty and employer liability.', source:'NCW Advisory, Jun 19 2026 (NCW_Press_Release.pdf)', month:'Aug 2026 (NCW Press Release)', isNew:true},
+  {id:60, area:'POSH', reg:'NCW Advisory — SHe-Box Registration and Employee Awareness', state:'Central', action:'Verify BusinessNext establishment is registered on the Government SHe-Box portal. Promote SHe-Box as the online complaint mechanism to all employees through email, intranet, and onboarding material. Include SHe-Box details in POSH policy and IC communications across UP and Maharashtra offices.', owner:'HR / IT / Communications', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Non-promotion of SHe-Box is a compliance gap flagged in NCW advisory; also weakens employer defence if a complaint is raised claiming inaccessibility.', source:'NCW Advisory, Jun 19 2026 (NCW_Press_Release.pdf)', month:'Aug 2026 (NCW Press Release)', isNew:true},
+  {id:61, area:'POSH', reg:'NCW Advisory — Specialized IC Member Training', state:'Central', action:'Conduct specialized POSH training for all IC members across every BusinessNext office and unit. Training must cover: fair and sensitive inquiry procedures, legally sound inquiry process, confidentiality obligations, SHe-Box usage, and updated regulatory environment (MH Inspection Officers active, NCW Advisory 2026). Maintain attendance records.', owner:'HR / L&D', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Untrained IC members risk procedurally deficient inquiries — creating void findings, employee grievances, and employer liability.', source:'NCW Advisory, Jun 19 2026 (NCW_Press_Release.pdf)', month:'Aug 2026 (NCW Press Release)', isNew:true},
+  {id:62, area:'POSH', reg:'NCW Advisory — Public Display of IC Details and Complaint Procedure', state:'Central', action:'Display IC composition, names, designations, email IDs, contact numbers, complaint procedures, and SHe-Box link prominently on: (a) BusinessNext website, (b) intranet/employee portal, and (c) notice boards in all offices and branches across UP and Maharashtra. Review and update quarterly.', owner:'HR / Admin / IT', due:'2026-09-30', priority:'Medium', status:'Open', risk:'Absence of publicly accessible IC information is a POSH Act compliance gap; weakens employer defence and is a visible non-compliance in any inspection.', source:'NCW Advisory, Jun 19 2026 (NCW_Press_Release.pdf)', month:'Aug 2026 (NCW Press Release)', isNew:true},
+];
+
+// ═══════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════
+function effectiveStatus(item) {
+  if (item.status === 'Done' || item.status === 'In Progress') return item.status;
+  const due = new Date(item.due);
+  if (due < TODAY) return 'Overdue';
+  return item.status || 'Open';
+}
+
+function daysUntil(dateStr) {
+  const due = new Date(dateStr);
+  return Math.ceil((due - TODAY) / 86400000);
+}
+
+function formatDate(str) {
+  const d = new Date(str);
+  return d.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+function stateBadge(s) {
+  if (s === 'Central') return '<span class="badge badge-central">Central</span>';
+  if (s === 'Maharashtra') return '<span class="badge badge-mh">MH</span>';
+  if (s === 'Uttar Pradesh') return '<span class="badge badge-up">UP</span>';
+  return '<span class="badge">' + s + '</span>';
+}
+
+function priorityBadge(p) {
+  const cls = {Critical:'badge-critical', High:'badge-high', Medium:'badge-medium', Low:'badge-low'};
+  return '<span class="badge ' + (cls[p]||'') + '">' + p + '</span>';
+}
+
+function statusClass(s) {
+  const m = {'Open':'status-open','Overdue':'status-overdue','In Progress':'status-in-progress','Done':'status-done'};
+  return m[s] || 'status-open';
+}
+
+// ═══════════════════════════════════════════════════════════
+// HEALTH SCORE
+// ═══════════════════════════════════════════════════════════
+function computeHealthScore() {
+  let score = 100;
+  actions.forEach(a => {
+    const eff = effectiveStatus(a);
+    if (eff === 'Overdue') {
+      if (a.priority === 'Critical') score -= 5;
+      else if (a.priority === 'High') score -= 2;
+      else if (a.priority === 'Medium') score -= 1;
+    } else if (eff === 'Open') {
+      if (a.priority === 'Critical') score -= 2;
+      else if (a.priority === 'High') score -= 0.5;
+    }
+  });
+  return Math.max(0, Math.round(score));
+}
+
+function updateHeader() {
+  const score = computeHealthScore();
+  const overdue = actions.filter(a => effectiveStatus(a) === 'Overdue').length;
+  const done = actions.filter(a => a.status === 'Done').length;
+  const open = actions.filter(a => effectiveStatus(a) === 'Open').length;
+  const critical = actions.filter(a => a.priority === 'Critical').length;
+  const high = actions.filter(a => a.priority === 'High').length;
+  const medium = actions.filter(a => a.priority === 'Medium').length;
+  const dueSoon = actions.filter(a => { const d = daysUntil(a.due); return d >= 0 && d <= 14 && effectiveStatus(a) !== 'Done'; }).length;
+
+  // Score circle
+  const pct = score + '%';
+  document.getElementById('scoreCircle').style.background = 'conic-gradient(' +
+    (score > 60 ? '#d97706' : score > 30 ? '#dc2626' : '#7f1d1d') +
+    ' 0% ' + pct + ', #374151 ' + pct + ' 100%)';
+  document.getElementById('scoreValue').textContent = score + '%';
+
+  const lbl = score > 70 ? 'AMBER' : 'RED — Act Now';
+  document.getElementById('healthLabel').innerHTML = '<strong>' + score + '/100 — ' + lbl + '</strong>';
+  document.getElementById('healthSub').textContent = '⚠ ' + overdue + ' Overdue · ' + critical + ' Critical · ' + (51 - done) + ' Active';
+
+  document.getElementById('headerScore').textContent = 'Health Score: ' + score + '/100';
+  document.getElementById('headerBadge').textContent = '▲ ' + overdue + ' Overdue | ' + done + ' Done | 51 Total';
+
+  // KPIs
+  document.getElementById('kpiCritical').textContent = critical;
+  document.getElementById('kpiOverdue').textContent = overdue;
+  document.getElementById('kpiHigh').textContent = high;
+  document.getElementById('kpiMedium').textContent = medium;
+  document.getElementById('kpiDueSoon').textContent = dueSoon;
+  document.getElementById('kpiOpen').textContent = open;
+  document.getElementById('kpiDone').textContent = done;
+
+  // Alert banner
+  const overdueItems = actions.filter(a => effectiveStatus(a) === 'Overdue' && a.priority === 'Critical');
+  document.getElementById('overdueAlertTitle').textContent = overdue + ' items are OVERDUE as of August 6, 2026. ' + overdueItems.length + ' are Critical priority.';
+  document.getElementById('overdueAlertBody').textContent = 'Immediate escalation required: EPF/EPS/EDLI 2026 scheme transition, Appointment Letters, POSH MH inspection compliance, Model Standing Orders certification, Code on Wages audit, and IR Code legacy-law transition are all past deadline.';
+}
+
+// ═══════════════════════════════════════════════════════════
+// SUPABASE
+// ═══════════════════════════════════════════════════════════
+async function initSupabase() {
+  try {
+    if (typeof window.supabase !== 'undefined') {
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      document.getElementById('setupBanner').style.display = 'flex';
+    }
+  } catch(e) { console.log('Supabase init failed:', e); }
+}
+
+async function loadStatuses() {
+  setSyncStatus('Syncing...', 'saving');
+  if (db) {
+    const {data, error} = await db.from('compliance_actions').select('id,status,notes');
+    if (!error && data) {
+      const existingIds = new Set(data.map(r => r.id));
+      const newItems = actions.filter(a => !existingIds.has(a.id)).map(a => ({
+        id: a.id, status: a.status || 'Open', notes: '', updated_at: new Date().toISOString()
+      }));
+      if (newItems.length > 0) {
+        await db.from('compliance_actions').insert(newItems);
+      }
+      data.forEach(row => {
+        const item = actions.find(a => a.id === row.id);
+        if (item) {
+          item.status = row.status || item.status;
+          item.notes = row.notes || '';
+        }
+      });
+      setSyncStatus('Synced ✓', 'saved');
+    } else {
+      setSyncStatus('Sync error', 'error');
+    }
+  } else {
+    setSyncStatus('Local only', 'saved');
+  }
+  document.getElementById('lastSyncTime').textContent = new Date().toLocaleTimeString('en-IN');
+  updateHeader();
+  filterTable();
+}
+
+async function updateStatus(id, val, el) {
+  const item = actions.find(a => a.id === id);
+  if (!item) return;
+  item.status = val;
+  el.className = 'status-select ' + statusClass(val);
+  if (db) {
+    setSyncStatus('Saving...', 'saving');
+    const {error} = await db.from('compliance_actions').upsert({
+      id, status: val, updated_at: new Date().toISOString()
+    });
+    setSyncStatus(error ? 'Error ✗' : 'Saved ✓', error ? 'error' : 'saved');
+  }
+  updateHeader();
+  const row = document.getElementById('row-' + id);
+  if (row) {
+    row.className = val === 'Done' ? 'done-row' : (item.isNew ? 'new-row' : '');
+  }
+}
+
+async function updateNotes(id, val) {
+  const item = actions.find(a => a.id === id);
+  if (!item) return;
+  item.notes = val;
+  if (db) {
+    await db.from('compliance_actions').upsert({
+      id, status: item.status, notes: val, updated_at: new Date().toISOString()
+    });
+  }
+}
+
+function setSyncStatus(msg, type) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = msg;
+  el.className = 'sync-indicator sync-' + type;
+  if (type === 'saved') setTimeout(() => { el.textContent = ''; el.className = ''; }, 2500);
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER TABLE
+// ═══════════════════════════════════════════════════════════
+function toggleMs(id, e) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById(id);
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.ms').forEach(m => m.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+document.addEventListener('click', function() {
+  document.querySelectorAll('.ms').forEach(m => m.classList.remove('open'));
+});
+
+function getMsValues(id) {
+  return Array.from(document.querySelectorAll('#' + id + ' input[type=checkbox]:checked')).map(c => c.value);
+}
+
+function updateMsBtn(id, label) {
+  const vals = getMsValues(id);
+  const btn = document.querySelector('#' + id + ' .ms-btn');
+  if (!btn) return;
+  btn.innerHTML = (vals.length === 0 ? label : vals.join(', ')) + ' <span>▾</span>';
+  btn.classList.toggle('active', vals.length > 0);
+}
+
+function clearFilters() {
+  document.querySelectorAll('.ms input[type=checkbox]').forEach(c => c.checked = false);
+  const fn = document.getElementById('fNew'); if (fn) fn.checked = false;
+  updateMsBtn('msState','All States');
+  updateMsBtn('msPriority','All Priorities');
+  updateMsBtn('msStatus','All Statuses');
+  updateMsBtn('msArea','All Areas');
+  filterTable();
+}
+
+function filterTable() {
+  const fStates = getMsValues('msState');
+  const fPrios  = getMsValues('msPriority');
+  const fStats  = getMsValues('msStatus');
+  const fAreas  = getMsValues('msArea');
+  const fNew    = document.getElementById('fNew') ? document.getElementById('fNew').checked : false;
+  updateMsBtn('msState','All States');
+  updateMsBtn('msPriority','All Priorities');
+  updateMsBtn('msStatus','All Statuses');
+  updateMsBtn('msArea','All Areas');
+  const filtered = actions.filter(a => {
+    const eff = effectiveStatus(a);
+    if (fStates.length > 0 && !fStates.includes(a.state)) return false;
+    if (fPrios.length  > 0 && !fPrios.includes(a.priority)) return false;
+    if (fStats.length  > 0 && !fStats.includes(eff)) return false;
+    if (fAreas.length  > 0 && !fAreas.includes(a.area)) return false;
+    if (fNew && !a.isNew) return false;
+    return true;
+  });
+  renderTable(filtered);
+}
+
+function renderTable(items) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  items.forEach(item => {
+    const eff = effectiveStatus(item);
+    const days = daysUntil(item.due);
+    const sc = statusClass(eff);
+    const rowClass = item.status === 'Done' ? 'done-row' : (item.isNew ? 'new-row' : '');
+    const dueTxt = formatDate(item.due) + (days < 0 ? ' <span class="overdue-auto">(+' + Math.abs(days) + 'd overdue)</span>' : days === 0 ? ' <span class="overdue-auto">(TODAY)</span>' : days <= 14 ? ' <span style="color:var(--amber);font-size:.6rem">('+days+'d)</span>' : '');
+    const notesVal = (item.notes || '').replace(/"/g, '&quot;');
+
+    const row = `<tr id="row-${item.id}" class="${rowClass}">
+      <td style="font-weight:700;color:var(--gray)">${item.id}</td>
+      <td>${item.isNew ? '<span class="badge badge-new">NEW</span>' : ''}</td>
+      <td><span style="font-size:.68rem;font-weight:600">${item.area}</span></td>
+      <td style="max-width:200px;font-weight:600;font-size:.72rem">${item.reg}</td>
+      <td>${stateBadge(item.state)}</td>
+      <td style="max-width:220px;font-size:.71rem">${item.action}</td>
+      <td style="font-size:.68rem;white-space:nowrap">${item.owner}</td>
+      <td style="white-space:nowrap;font-size:.68rem">${dueTxt}</td>
+      <td>${priorityBadge(item.priority)}</td>
+      <td>
+        <select class="status-select ${sc}" onchange="updateStatus(${item.id},this.value,this)">
+          <option value="Open" ${eff==='Open'?'selected':''}>Open</option>
+          <option value="In Progress" ${eff==='In Progress'?'selected':''}>In Progress</option>
+          <option value="Overdue" ${eff==='Overdue'?'selected':''}>⚠ Overdue</option>
+          <option value="Done" ${eff==='Done'?'selected':''}>✓ Done</option>
+        </select>
+      </td>
+      <td>
+        <input class="notes-input" type="text" value="${notesVal}" placeholder="Add notes / action taken..." onchange="updateNotes(${item.id},this.value)" />
+      </td>
+      <td style="max-width:140px;font-size:.68rem">${item.risk}</td>
+      <td><span class="src">${item.source}</span></td>
+      <td><span class="month-tag">${item.month}</span></td>
+    </tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function showTab(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('load', async () => {
+  await initSupabase();
+  await loadStatuses();
+});
+</script>
+</body>
+</html>
