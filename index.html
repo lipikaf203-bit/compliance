@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Compliance Intelligence Dashboard v3.8 | BusinessNext HR</title>
+<title>Compliance Intelligence Dashboard v3.9 | BusinessNext HR</title>
 <style>
   :root{--red:#dc2626;--amber:#d97706;--green:#16a34a;--blue:#1d4ed8;--gray:#6b7280;--dark:#111827;--light:#f9fafb;--border:#e5e7eb;color-scheme:light;}
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -123,8 +123,8 @@
 
 <div class="header">
   <div>
-    <h1>🏛 Compliance Intelligence Dashboard — v3.8</h1>
-    <div style="font-size:.68rem;color:#9ca3af;margin-top:2px;">BusinessNext | IT Product Co. | ~1,500 Employees | UP &amp; Maharashtra | Sep 3, 2026 | All Documents Reviewed</div>
+    <h1>🏛 Compliance Intelligence Dashboard — v3.9</h1>
+    <div style="font-size:.68rem;color:#9ca3af;margin-top:2px;">BusinessNext | IT Product Co. | ~1,500 Employees | UP &amp; Maharashtra | Sep 4, 2026 | All Documents Reviewed</div>
   </div>
   <div class="meta">
     <strong id="headerScore">Loading...</strong><br>
@@ -252,7 +252,7 @@
       <tbody id="tableBody"></tbody>
     </table>
   </div>
-  <div class="last-updated">Last synced: <span id="lastSyncTime">—</span> | v3.8 — All documents reviewed: NL-98 to NL-119, Monthly Mar/Jun/Jul/Aug/Sep 2026, EPFO Circulars, Labour Code Central Rules, EPFO UMANG Doc, EPFO PF Withdrawal Infographic, NCW POSH Advisory, Labour Code FAQs, Labour Codes Implementation Presentation, Sep 2026 Monthly Newsletter</div>
+  <div class="last-updated">Last synced: <span id="lastSyncTime">—</span> | v3.9 — All documents reviewed: NL-98 to NL-119, Monthly Mar/Jun/Jul/Aug/Sep 2026, EPFO Circulars, Labour Code Central Rules, EPFO UMANG Doc, EPFO PF Withdrawal Infographic, NCW POSH Advisory, Labour Code FAQs, Labour Codes Implementation Presentation, Sep 2026 Monthly Newsletter</div>
 </div>
 
 <!-- ═══ CALENDAR ═══ -->
@@ -266,7 +266,7 @@
     <div class="status-block"><div class="sb-label">Many Items OVERDUE</div><div class="sb-status" style="color:var(--red)">⬤ Escalate Now</div></div>
   </div>
 
-  <h3 class="sub-title" style="color:var(--red)">⚠ OVERDUE — Missed Deadlines (as of Sep 3, 2026)</h3>
+  <h3 class="sub-title" style="color:var(--red)">⚠ OVERDUE — Missed Deadlines (as of Sep 4, 2026)</h3>
   <div class="table-wrap" style="margin-bottom:16px">
     <table><thead><tr><th>Was Due</th><th>Obligation</th><th>State</th><th>Priority</th><th>Owner</th><th>Immediate Action</th></tr></thead>
       <tbody>
@@ -425,7 +425,7 @@
 
 <!-- ═══ RISK REGISTER ═══ -->
 <div id="risk" class="section">
-  <h2 class="section-title">Compliance Risk Register — BusinessNext | Sep 3, 2026</h2>
+  <h2 class="section-title">Compliance Risk Register — BusinessNext | Sep 4, 2026</h2>
   <div class="alert-banner">
     <strong>7 Critical-level items and 21 High-level items are currently tracked. Multiple Critical items are past their deadline.</strong>
     Immediate CHRO-level escalation required for EPF/EPS/EDLI scheme transition, Appointment Letters, POSH Maharashtra, and Model Standing Orders.
@@ -562,10 +562,10 @@
 const SUPABASE_URL = 'https://oviboktiounvchxqortz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_HFpFoUk_QzUvnY2rhwLdYQ_XzCHoSkZ';
 let db = null;
-const TODAY = new Date('2026-09-03');
+const TODAY = new Date('2026-09-04');
 
 // ═══════════════════════════════════════════════════════════
-// MASTER ACTIONS ARRAY — v3.8 — 78 ITEMS
+// MASTER ACTIONS ARRAY — v3.9 — 78 ITEMS
 // ═══════════════════════════════════════════════════════════
 const actions = [
   {id:1,  area:'POSH', reg:'POSH Act 2013 — MH Inspection Activated', state:'Maharashtra', action:'Verify ICC constitution, She-Box registration, and prepare compliance checklist response per MH WCD inspection checklist', owner:'HR / Legal', due:'2026-06-09', priority:'Critical', status:'Open', risk:'Criminal liability / ₹50K fine / Licence suspension', source:'MH WCD Circular, May 14 2026', month:'May 2026 (NL-107)', isNew:false},
@@ -742,7 +742,7 @@ function updateHeader() {
 
   // Alert banner
   const overdueItems = actions.filter(a => effectiveStatus(a) === 'Overdue' && a.priority === 'Critical');
-  document.getElementById('overdueAlertTitle').textContent = overdue + ' items are OVERDUE as of Sep 3, 2026. ' + overdueItems.length + ' are Critical priority.';
+  document.getElementById('overdueAlertTitle').textContent = overdue + ' items are OVERDUE as of Sep 4, 2026. ' + overdueItems.length + ' are Critical priority.';
   document.getElementById('overdueAlertBody').textContent = 'Immediate escalation required: EPF/EPS/EDLI 2026 scheme transition, Appointment Letters, POSH MH inspection compliance, Model Standing Orders certification, Code on Wages audit, and IR Code legacy-law transition are all past deadline.';
 }
 
@@ -889,7 +889,7 @@ function renderTable(items) {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
   items = items.slice().sort((a, b) => a.id - b.id);
-  items.forEach(item => {
+  items.forEach((item, idx) => {
     const eff = effectiveStatus(item);
     const days = daysUntil(item.due);
     const sc = statusClass(eff);
@@ -898,7 +898,7 @@ function renderTable(items) {
     const notesVal = (item.notes || '').replace(/"/g, '&quot;');
 
     const row = `<tr id="row-${item.id}" class="${rowClass}">
-      <td style="font-weight:700;color:var(--gray)">${item.id}</td>
+      <td style="font-weight:700;color:var(--gray)">${idx+1}</td>
       <td>${item.isNew ? '<span class="badge badge-new">NEW</span>' : ''}</td>
       <td><span style="font-size:.68rem;font-weight:600">${item.area}</span></td>
       <td style="max-width:200px;font-weight:600;font-size:.72rem">${item.reg}</td>
@@ -941,7 +941,7 @@ function renderClosedTable() {
   doneItems.forEach((item, idx) => {
     const notesVal = (item.notes || '').replace(/"/g, '&quot;');
     const row = `<tr class="done-row">
-      <td style="font-weight:700;color:var(--gray)">${item.id}</td>
+      <td style="font-weight:700;color:var(--gray)">${idx+1}</td>
       <td><span style="font-size:.68rem;font-weight:600">${item.area}</span></td>
       <td style="max-width:200px;font-weight:600;font-size:.72rem">${item.reg}</td>
       <td>${stateBadge(item.state)}</td>
